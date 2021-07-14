@@ -1,0 +1,45 @@
+{
+	"title": "Reviewshake Widgets",
+	"name": "reviewshake-widgets",
+	"description": "Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other website.",
+	"main": "reviewshake-widgets.php",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mahmoudbasiony/reviewshake-widgets"
+	},
+	"keywords": [
+		"wordpress",
+		"reviewshake",
+		"reviews",
+		"google",
+		"facebook",
+		"yelb",
+		"widget"
+	],
+	"author": "Reviewshake",
+	"license": "GPL-3.0",
+	"homepage": "https://github.com/mahmoudbasiony/reviewshake-widgets#readme",
+	"devDependencies": {
+		"babel-core": "^6.26.0",
+		"babel-preset-env": "^1.6.1",
+		"del": "^3.0.0",
+		"gulp": "^3.9.1",
+		"gulp-babel": "^7.0.1",
+		"gulp-concat": "^2.6.1",
+		"gulp-jshint": "^2.1.0",
+		"gulp-rename": "^1.2.2",
+		"gulp-sass": "^4.0.1",
+		"gulp-uglify": "^3.0.0",
+		"gulp-uglifycss": "^1.0.9",
+		"gulp-util": "^3.0.8",
+		"gulp-wp-pot": "^2.2.0",
+		"gulp-zip": "^5.1.0",
+		"jshint": "^2.9.5"
+	},
+	"dependencies": {
+		"postscribe": "^2.0.8"
+	}
+}

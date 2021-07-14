@@ -1,0 +1,9 @@
+node_modules/
+vendor/
+assets/dist/css
+assets/dist/js
+
+languages/reviewshake-widgets.pot
+package-lock.json
+composer.lock
+reviewshake-widgets.zip
