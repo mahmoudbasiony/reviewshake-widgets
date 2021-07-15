@@ -27,4 +27,6 @@ $ npm install
 
 - `gulp build` : Compiles & Minify assets and generates a .pot file in the `languages/` directory.
 
+- `gulp clean` : Deletes all minified assets and languages files.
+
 - `gulp buildPlugin` : generates a .zip archive for distribution, excluding development and system files.
