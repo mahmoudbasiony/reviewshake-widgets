@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings = get_option( 'reviewshake_widgets_settings', array() );
 
 // Get all the available review sources array.
-$review_sources = include_once 'vendor/review-sources.php';
+$review_sources = include_once 'sources/review-sources.php';
 
 // Sort review sources alphabetically.
 ksort( $review_sources );
