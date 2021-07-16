@@ -9,6 +9,33 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  */
 
 (function ($) {
+	/**
+  * Get app state and continue creating the account.
+  */
+	$(document).ready(function () {
+		var appState = reviewshake_widgets_params.state;
+		var sourceName = appState.source_name;
+		var sourceUrl = appState.source_url;
+
+		console.log(appState);
+		if (appState.hasOwnProperty('account_status') && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
+			console.log('Pending account status');
+			var form = $('#create_review_source_form');
+			var isAccountExists = form.data('account-exists');
+			var secToSleep = appState.sec_to_sleep;
+
+			console.log('sec To sleep ' + secToSleep);
+
+			// Show Loader.
+			showLoader('reviewshake-widgets-setup-wrap', form);
+
+			/**
+    * Continue creating the account.
+    */
+			createAccount(sourceName, sourceUrl, form, isAccountExists, secToSleep);
+		}
+	});
+
 	/*
   * Adds placeholder on change review name select options.
   */
@@ -30,6 +57,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		var source = form.find('select[name="source_name"] option:selected').val().toLowerCase();
 		var isAccountExists = form.data('account-exists');
 		var sourceID = parseInt(form.attr('data-review-source-id'));
+		var sourcesCount = parseInt(form.attr('data-sources-count'));
+		var pricingPlan = form.attr('data-pricing-plan');
 
 		// Define errors
 		var errors = false;
@@ -717,7 +746,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   */
 	var createAccount = function () {
 		var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(source, sourceUrl, form, isAccountExists) {
-			var sourcesCount, pricingPlan, createAccountResponse, createAccountJson, attributes, accountDomain, email, tryGetAccount;
+			var secToSleep = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
+
+			var sourcesCount, pricingPlan, body, createAccountResponse, createAccountJson, attributes, accountDomain, email, tryGetAccount, listWidgetsJson, _body2, addReviewSources;
+
 			return regeneratorRuntime.wrap(function _callee8$(_context8) {
 				while (1) {
 					switch (_context8.prev = _context8.next) {
@@ -732,39 +764,61 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 								form.closest('#reviewshake-widgets').find('.creating-account-notice').show();
 							}
 
+							/*
+        * If account doesn't exist.
+        */
+
+							if (!(isAccountExists.length <= 0)) {
+								_context8.next = 22;
+								break;
+							}
+
+							body = {
+								'source': source,
+								'sourceUrl': sourceUrl
+							};
+
 							// Send the create new account request to rest API 
-							_context8.next = 5;
+
+							_context8.next = 7;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/', {
 								method: 'POST',
 								headers: {
 									'Content-Type': 'application/json',
 									'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
-								}
+								},
+								body: JSON.stringify(body)
 							});
 
-						case 5:
+						case 7:
 							createAccountResponse = _context8.sent;
-							_context8.next = 8;
+							_context8.next = 10;
 							return createAccountResponse.json();
 
-						case 8:
+						case 10:
 							createAccountJson = _context8.sent;
+
+							console.log(createAccountJson);
 							attributes = createAccountJson.data.attributes;
 							accountDomain = createAccountJson.data.links.account_domain;
 							email = attributes.email;
 
-							// Wait for 20 seconds to get account created.
 
-							_context8.next = 14;
+							console.log('beforeSleep');
+
+							// Wait for x seconds to get account created.
+							_context8.next = 18;
 							return new Promise(function (resolve) {
-								return isAccountExists == '' ? setTimeout(resolve, 20000) : resolve();
+								return isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve();
 							});
 
-						case 14:
+						case 18:
+
+							console.log('afterSleep');
 
 							// Set interval every 5 seconds to check account fully created.
 							tryGetAccount = setInterval(_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7() {
-								var getAccountResponse, getAccountJson, _attributes, id, type, apiKey, _accountDomain, convertToFree, listWidgets, listWidgetsJson, count, body, addReviewSource, reviewSourceJson, html, successTitle, successMessage, message, detail;
+								var getAccountResponse, getAccountJson, _attributes, id, type, apiKey, _accountDomain, convertToFree, listWidgetsJson, count, _body, addReviewSources;
 
 								return regeneratorRuntime.wrap(function _callee7$(_context7) {
 									while (1) {
@@ -790,7 +844,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												getAccountJson = _context7.sent;
 
 												if (!(getAccountJson.hasOwnProperty('data') && getAccountJson.data.hasOwnProperty('attributes'))) {
-													_context7.next = 39;
+													_context7.next = 35;
 													break;
 												}
 
@@ -806,6 +860,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 												console.log('Get account created success');
 												console.log('before trial api');
+
 												// If account is on trial plan.
 
 												if (!('' == pricingPlan || 'trial' === pricingPlan)) {
@@ -825,110 +880,108 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 											case 18:
 												convertToFree = _context7.sent;
 
-
 												console.log('Account get a free plan');
 
 											case 20:
+
 												console.log('after trial api');
 
-												// Send the listing widgets request to rest API
 												_context7.next = 23;
-												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/', {
-													method: 'GET',
-													headers: {
-														'content-type': 'application/json',
-														'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
-													}
-												});
+												return listWidgets();
 
 											case 23:
-												listWidgets = _context7.sent;
-												_context7.next = 26;
-												return listWidgets.json();
-
-											case 26:
 												listWidgetsJson = _context7.sent;
 
-
-												if (listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode) {
-													count = listWidgetsJson.hasOwnProperty('count') ? parseInt(listWidgetsJson.count) : 0;
-
-
-													console.log('Widgets listed successfuly');
-													console.log('You have ' + count + ' of registered Widgets');
+												if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
+													_context7.next = 34;
+													break;
 												}
 
-												console.log('Account Domain ' + _accountDomain);
+												count = listWidgetsJson.hasOwnProperty('count') ? parseInt(listWidgetsJson.count) : 0;
 
-												body = {
+
+												console.log('Widgets listed successfuly');
+												console.log('You have ' + count + ' of registered Widgets');
+
+												_body = {
 													'apikey': apiKey,
 													'subdomain': _accountDomain,
 													'source': source,
 													'sourceUrl': sourceUrl
 												};
 
-												// Send add review source request to rest API
+												/**
+             * Adds the review source to the currently created account.
+             *
+             * @param {object} body - The request body.
+             */
 
-												_context7.next = 32;
-												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/review_sources/', {
-													method: 'POST',
-													headers: {
-														'Content-Type': 'application/json',
-														'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
-													},
-													body: JSON.stringify(body)
-												});
+												_context7.next = 31;
+												return addReviewSource(_body);
 
-											case 32:
-												addReviewSource = _context7.sent;
-												_context7.next = 35;
-												return addReviewSource.json();
+											case 31:
+												addReviewSources = _context7.sent;
 
-											case 35:
-												reviewSourceJson = _context7.sent;
-
-
-												if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode) {
-													console.log('Review source added successfully!');
-													html = reviewSourceJson.html;
-													successTitle = reviewshake_widgets_params.translations.add_source_success.title;
-													successMessage = reviewshake_widgets_params.translations.add_source_success.message;
-
-													// Success popup.
-
-													showPopup(successTitle, successMessage);
-													setTimeout(hidePopup, 5000);
-
-													$('#reviewshake-widgets-setup').remove();
-
-													postscribe('#reviewshake-tab-setup', html);
-												} else {
-													console.log(reviewSourceJson);
-													$('.reviewshake-widgets-setup-wrap').show();
-
-													if (!addReviewSource.ok && reviewSourceJson.hasOwnProperty('message') && reviewSourceJson.hasOwnProperty('data')) {
-														message = reviewSourceJson.message;
-														detail = reviewSourceJson.data.detail;
-
-
-														showPopup(message, detail, true, 'error');
-													}
-												}
 
 												// Wp Color Picker.
 												$('.color_field').wpColorPicker();
+
 												// Hide Loader.
 												hideLoader();
 
-											case 39:
+											case 34:
+
+												console.log('Account Domain ' + _accountDomain);
+
+											case 35:
 											case 'end':
 												return _context7.stop();
 										}
 									}
 								}, _callee7, undefined);
 							})), 5000);
+							_context8.next = 32;
+							break;
 
-						case 15:
+						case 22:
+							_context8.next = 24;
+							return listWidgets();
+
+						case 24:
+							listWidgetsJson = _context8.sent;
+
+							if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
+								_context8.next = 32;
+								break;
+							}
+
+							_body2 = {
+								'apikey': '',
+								'subdomain': '',
+								'source': source,
+								'sourceUrl': sourceUrl
+							};
+
+							/**
+        * Adds the review source to the currently created account.
+        *
+        * @param {object} body - The request body.
+        */
+
+							_context8.next = 29;
+							return addReviewSource(_body2);
+
+						case 29:
+							addReviewSources = _context8.sent;
+
+
+							// Wp Color Picker.
+							$('.color_field').wpColorPicker();
+
+							// Hide Loader.
+							hideLoader();
+
+						case 32:
 						case 'end':
 							return _context8.stop();
 					}
@@ -936,8 +989,166 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			}, _callee8, undefined);
 		}));
 
-		return function createAccount(_x12, _x13, _x14, _x15) {
+		return function createAccount(_x13, _x14, _x15, _x16) {
 			return _ref7.apply(this, arguments);
+		};
+	}();
+
+	/**
+  * Add review source to reviewshake account.
+  *
+  * @param {object} body - The create review source request body.
+  */
+	var addReviewSource = function () {
+		var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(body) {
+			var addReviewSource, reviewSourceJson, html, successTitle, successMessage, message, detail;
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
+				while (1) {
+					switch (_context9.prev = _context9.next) {
+						case 0:
+							_context9.next = 2;
+							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/review_sources/', {
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
+								},
+								body: JSON.stringify(body)
+							});
+
+						case 2:
+							addReviewSource = _context9.sent;
+							_context9.next = 5;
+							return addReviewSource.json();
+
+						case 5:
+							reviewSourceJson = _context9.sent;
+
+
+							if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode) {
+								console.log('Review source added successfully!');
+								html = reviewSourceJson.html;
+								successTitle = reviewshake_widgets_params.translations.add_source_success.title;
+								successMessage = reviewshake_widgets_params.translations.add_source_success.message;
+
+								// Success popup.
+
+								showPopup(successTitle, successMessage);
+								setTimeout(hidePopup, 3000);
+
+								$('#reviewshake-widgets-setup').remove();
+
+								postscribe('#reviewshake-tab-setup', html);
+							} else {
+								console.log(reviewSourceJson);
+								$('.reviewshake-widgets-setup-wrap').show();
+
+								if (!addReviewSource.ok && reviewSourceJson.hasOwnProperty('message') && reviewSourceJson.hasOwnProperty('data')) {
+									message = reviewSourceJson.message;
+									detail = reviewSourceJson.data.detail;
+
+
+									showPopup(message, detail, true, 'error');
+								}
+							}
+
+						case 7:
+						case 'end':
+							return _context9.stop();
+					}
+				}
+			}, _callee9, undefined);
+		}));
+
+		return function addReviewSource(_x17) {
+			return _ref9.apply(this, arguments);
+		};
+	}();
+
+	/**
+  * List all widgets for the current reviewshaka account.
+  *
+  * @return {JSON} listWidgetsJson.
+  */
+	var listWidgets = function () {
+		var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {
+			var listWidgets, listWidgetsJson;
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+				while (1) {
+					switch (_context10.prev = _context10.next) {
+						case 0:
+							_context10.next = 2;
+							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/', {
+								method: 'GET',
+								headers: {
+									'content-type': 'application/json',
+									'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
+								}
+							});
+
+						case 2:
+							listWidgets = _context10.sent;
+
+							console.log('Inside List');
+							// Get the widgets response json
+							_context10.next = 6;
+							return listWidgets.json();
+
+						case 6:
+							listWidgetsJson = _context10.sent;
+							return _context10.abrupt('return', listWidgetsJson);
+
+						case 8:
+						case 'end':
+							return _context10.stop();
+					}
+				}
+			}, _callee10, undefined);
+		}));
+
+		return function listWidgets() {
+			return _ref10.apply(this, arguments);
+		};
+	}();
+
+	/**
+  * 
+  */
+	var listWidgetsAddReviewSource = function () {
+		var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(body) {
+			var listWidgetsJson, addReviewSources;
+			return regeneratorRuntime.wrap(function _callee11$(_context11) {
+				while (1) {
+					switch (_context11.prev = _context11.next) {
+						case 0:
+							_context11.next = 2;
+							return listWidgets();
+
+						case 2:
+							listWidgetsJson = _context11.sent;
+							_context11.next = 5;
+							return addReviewSource(body);
+
+						case 5:
+							addReviewSources = _context11.sent;
+
+
+							// Wp Color Picker.
+							$('.color_field').wpColorPicker();
+
+							// Hide Loader.
+							hideLoader();
+
+						case 8:
+						case 'end':
+							return _context11.stop();
+					}
+				}
+			}, _callee11, undefined);
+		}));
+
+		return function listWidgetsAddReviewSource(_x18) {
+			return _ref11.apply(this, arguments);
 		};
 	}();
 
@@ -1058,7 +1269,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * Hide popup overlay
   */
 	var hidePopup = function hidePopup() {
-		$('.reviewshake-popup-wrap').fadeOut(800);
+		$('.reviewshake-popup-wrap').fadeOut(500);
 		$('.reviewshake-popup-box').removeClass('transform-in').addClass('transform-out');
 	};
 })(jQuery);

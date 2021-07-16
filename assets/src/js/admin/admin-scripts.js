@@ -5,6 +5,32 @@
  */
 
 ( $ => {
+	/**
+	 * Get app state and continue creating the account.
+	 */
+	$(document).ready(function(){
+		const appState = reviewshake_widgets_params.state;
+		let sourceName = appState.source_name;
+		let sourceUrl  = appState.source_url;
+
+		console.log(appState);
+		if (appState.hasOwnProperty('account_status') && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
+			let form = $('#create_review_source_form');
+			let isAccountExists = form.data('account-exists');
+			let secToSleep = appState.sec_to_sleep;
+
+			console.log('sec To sleep ' + secToSleep);
+
+			// Show Loader.
+			showLoader('reviewshake-widgets-setup-wrap', form);
+
+			/**
+			 * Continue creating the account.
+			 */
+			createAccount(sourceName, sourceUrl, form, isAccountExists, secToSleep);
+		}
+	});
+
 	/*
 	 * Adds placeholder on change review name select options.
 	 */
@@ -26,6 +52,8 @@
 		let source = form.find('select[name="source_name"] option:selected').val().toLowerCase();
 		let isAccountExists = form.data('account-exists');
 		let sourceID = parseInt( form.attr('data-review-source-id') );
+		let sourcesCount = parseInt( form.attr('data-sources-count') );
+		let pricingPlan  = form.attr('data-pricing-plan');
 
 		// Define errors
 		let errors = false;
@@ -552,153 +580,244 @@
 	 *
 	 * @return void
 	 */
-	const createAccount = async(source, sourceUrl, form, isAccountExists) => {
+	const createAccount = async(source, sourceUrl, form, isAccountExists, secToSleep = 20) => {
 		let sourcesCount = parseInt( form.attr('data-sources-count') );
 		let pricingPlan  = form.attr('data-pricing-plan');
 
 		// If is first review source.
-		if ( sourcesCount === 0 && '' == isAccountExists ) {
+		if (sourcesCount === 0 && '' == isAccountExists) {
 			form.addClass('first');
 			form.closest('#reviewshake-widgets').find('.creating-account-notice').show();
 		}
 
-		// Send the create new account request to rest API 
-		const createAccountResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/account/', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
-			}
-		});
+		/*
+		 * If account doesn't exist.
+		 */
+		if (isAccountExists.length <= 0) {
+			const body = {
+				'source' : source,
+				'sourceUrl' : sourceUrl,
+			};
 
-		// Get the create account response json.
-		const createAccountJson = await createAccountResponse.json();
-
-		let attributes = createAccountJson.data.attributes;
-		let accountDomain = createAccountJson.data.links.account_domain;
-		let email = attributes.email;
-
-		// Wait for 20 seconds to get account created.
-		await new Promise(resolve => isAccountExists == '' ? setTimeout(resolve, 20000) : resolve());
-
-		// Set interval every 5 seconds to check account fully created.
-		const tryGetAccount = setInterval(async () => {
-			// Send get account status request to rest API
-			const getAccountResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/account/?'+ new URLSearchParams({
-				email: email,
-			}), {
-				method: 'GET',
+			// Send the create new account request to rest API 
+			const createAccountResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/account/', {
+				method: 'POST',
 				headers: {
-					'Content-Type' : 'application/json',
+					'Content-Type': 'application/json',
 					'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
-				}
+				},
+				body: JSON.stringify(body),
 			});
 
-			// Get the account status response json.
-			const getAccountJson = await getAccountResponse.json();
+			// Get the create account response json.
+			const createAccountJson = await createAccountResponse.json();
+			console.log(createAccountJson);
+			let attributes = createAccountJson.data.attributes;
+			let accountDomain = createAccountJson.data.links.account_domain;
+			let email = attributes.email;
 
-			if (getAccountJson.hasOwnProperty('data') && getAccountJson.data.hasOwnProperty('attributes')) {
-				// Clear the interval.
-				clearInterval(tryGetAccount);
+			console.log('beforeSleep');
 
-				let attributes = getAccountJson.data.attributes;
-				let id = getAccountJson.data.id;
-				let type = getAccountJson.data.type;
-				let apiKey    = attributes.api_key;
-				let accountDomain = attributes.account_domain;
+			// Wait for x seconds to get account created.
+			await new Promise(resolve => isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve());
 
-				console.log('Get account created success');
-				console.log('before trial api');
-				// If account is on trial plan.
-				if( '' == pricingPlan || 'trial' === pricingPlan ) {
-					// Send the convert trial account to free plan rest API
-					const convertToFree = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/account/'+apiKey+'/'+ accountDomain, {
-						method: 'PUT',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
-						}
-					});
+			console.log('afterSleep');
 
-					console.log('Account get a free plan');
-				}
-				console.log('after trial api');
-
-				// Send the listing widgets request to rest API
-				const listWidgets = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/widgets/', {
+			// Set interval every 5 seconds to check account fully created.
+			const tryGetAccount = setInterval(async () => {
+				// Send get account status request to rest API
+				const getAccountResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/account/?'+ new URLSearchParams({
+					email: email,
+				}), {
 					method: 'GET',
 					headers: {
-						'content-type': 'application/json',
-						'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce,
+						'Content-Type' : 'application/json',
+						'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
 					}
-				} );
+				});
 
-				// Get the widgets response json
-				const listWidgetsJson = await listWidgets.json();
+				// Get the account status response json.
+				const getAccountJson = await getAccountResponse.json();
 
-				if( listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode ) {
+				if (getAccountJson.hasOwnProperty('data') && getAccountJson.data.hasOwnProperty('attributes')) {
+					// Clear the interval.
+					clearInterval(tryGetAccount);
+	
+					let attributes = getAccountJson.data.attributes;
+					let id = getAccountJson.data.id;
+					let type = getAccountJson.data.type;
+					let apiKey    = attributes.api_key;
+					let accountDomain = attributes.account_domain;
 
-					let count = listWidgetsJson.hasOwnProperty('count') ? parseInt(listWidgetsJson.count) : 0;
+					console.log('Get account created success');
+					console.log('before trial api');
 
-					console.log('Widgets listed successfuly');
-					console.log('You have ' +count+ ' of registered Widgets');
+					// If account is on trial plan.
+					if( '' == pricingPlan || 'trial' === pricingPlan ) {
+						// Send the convert trial account to free plan rest API
+						const convertToFree = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/account/'+apiKey+'/'+ accountDomain, {
+							method: 'PUT',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
+							}
+						});
+						console.log('Account get a free plan');
+					}
+
+					console.log('after trial api');
+
+					const listWidgetsJson = await listWidgets();
+
+					if (listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode) {
+						let count = listWidgetsJson.hasOwnProperty('count') ? parseInt(listWidgetsJson.count) : 0;
+
+						console.log('Widgets listed successfuly');
+						console.log('You have ' +count+ ' of registered Widgets');
+
+						let body = {
+							'apikey' : apiKey,
+							'subdomain' : accountDomain,
+							'source' : source,
+							'sourceUrl' : sourceUrl,
+						};
+	
+						/**
+						 * Adds the review source to the currently created account.
+						 *
+						 * @param {object} body - The request body.
+						 */
+						const addReviewSources = await addReviewSource(body);
+	
+						// Wp Color Picker.
+						$( '.color_field' ).wpColorPicker();
+	
+						// Hide Loader.
+						hideLoader();
+					}
+
+					console.log( 'Account Domain ' + accountDomain );
 				}
+			}, 5000);
+		} else {
+			/**
+			 * List the available widgets for the account.
+			 */
+			const listWidgetsJson = await listWidgets();
 
-				console.log( 'Account Domain ' + accountDomain );
-
-				const body = {
-					'apikey' : apiKey,
-					'subdomain' : accountDomain,
+			if (listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode) {
+				let body = {
+					'apikey' : '',
+					'subdomain' : '',
 					'source' : source,
 					'sourceUrl' : sourceUrl,
 				};
 
-				// Send add review source request to rest API
-				const addReviewSource = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/review_sources/', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
-					},
-					body: JSON.stringify(body),
-				} );
-
-				// Get the add review source response json.
-				const reviewSourceJson = await addReviewSource.json();
-
-				if( reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode  ) {
-					console.log('Review source added successfully!');
-					let html = reviewSourceJson.html;
-
-					let successTitle   = reviewshake_widgets_params.translations.add_source_success.title;
-					let successMessage = reviewshake_widgets_params.translations.add_source_success.message;
-
-					// Success popup.
-					showPopup(successTitle, successMessage);
-					setTimeout(hidePopup, 5000);
-
-					$('#reviewshake-widgets-setup').remove();
-
-					postscribe('#reviewshake-tab-setup', html);
-				} else {
-					console.log(reviewSourceJson);
-					$('.reviewshake-widgets-setup-wrap').show();
-
-					if (!addReviewSource.ok && reviewSourceJson.hasOwnProperty('message') && reviewSourceJson.hasOwnProperty('data') ) {
-						let message = reviewSourceJson.message;
-						let detail = reviewSourceJson.data.detail;
-
-						showPopup(message, detail, true, 'error');
-					}
-				}
+				/**
+				 * Adds the review source to the currently created account.
+				 *
+				 * @param {object} body - The request body.
+				 */
+				const addReviewSources = await addReviewSource(body);
 
 				// Wp Color Picker.
 				$( '.color_field' ).wpColorPicker();
+
 				// Hide Loader.
 				hideLoader();
 			}
-		}, 5000);
+		}
 	}
+
+	/**
+	 * Add review source to reviewshake account.
+	 *
+	 * @param {object} body - The create review source request body.
+	 */
+	const addReviewSource = async(body) => {
+		// Send add review source request to rest API
+		const addReviewSource = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/review_sources/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
+			},
+			body: JSON.stringify(body),
+		} );
+
+		// Get the add review source response json.
+		const reviewSourceJson = await addReviewSource.json();
+
+		if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode) {
+			console.log('Review source added successfully!');
+			let html = reviewSourceJson.html;
+
+			let successTitle   = reviewshake_widgets_params.translations.add_source_success.title;
+			let successMessage = reviewshake_widgets_params.translations.add_source_success.message;
+
+			// Success popup.
+			showPopup(successTitle, successMessage);
+			setTimeout(hidePopup, 3000);
+
+			$('#reviewshake-widgets-setup').remove();
+
+			postscribe('#reviewshake-tab-setup', html);
+		} else {
+			console.log(reviewSourceJson);
+			$('.reviewshake-widgets-setup-wrap').show();
+
+			if (!addReviewSource.ok && reviewSourceJson.hasOwnProperty('message') && reviewSourceJson.hasOwnProperty('data') ) {
+				let message = reviewSourceJson.message;
+				let detail = reviewSourceJson.data.detail;
+
+				showPopup(message, detail, true, 'error');
+			}
+		}
+	};
+
+	/**
+	 * List all widgets for the current reviewshaka account.
+	 *
+	 * @return {JSON} listWidgetsJson.
+	 */
+	const listWidgets = async() => {
+		// Send the listing widgets request to rest API
+		const listWidgets = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/widgets/', {
+			method: 'GET',
+			headers: {
+				'content-type': 'application/json',
+				'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce,
+			}
+		} );
+		console.log('Inside List');
+		// Get the widgets response json
+		const listWidgetsJson = await listWidgets.json();
+
+		return listWidgetsJson;
+	};
+
+	/**
+	 * 
+	 */
+	const listWidgetsAddReviewSource = async(body) => {
+		/**
+		 * List the available widgets for the account.
+		 */
+		const listWidgetsJson = await listWidgets();
+
+		/**
+		 * Adds the review source to the currently created account.
+		 *
+		 * @param {object} body - The request body.
+		 */
+		const addReviewSources = await addReviewSource(body);
+
+		// Wp Color Picker.
+		$( '.color_field' ).wpColorPicker();
+
+		// Hide Loader.
+		hideLoader();
+	};
 
 	/**
 	 * Show loader.
@@ -813,7 +932,7 @@
 	 * Hide popup overlay
 	 */
 	const hidePopup = () => {
-		$('.reviewshake-popup-wrap').fadeOut(800);
+		$('.reviewshake-popup-wrap').fadeOut(500);
 		$('.reviewshake-popup-box').removeClass('transform-in').addClass('transform-out');
 	}
 } )( jQuery );

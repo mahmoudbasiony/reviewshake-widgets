@@ -216,6 +216,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 * @return WP_Error|WP_REST_Response
 		 */
 		public function create_item( $request ) {
+			$state = array(
+				'source_status'   => 'completed',
+				'request_type'    => 'create_review_source',
+				'request_no'      => 5,
+				'connection_type' => 'setup',
+			);
+
+			// Set state.
+			$set_state = reviewshake_save_settings( 'state', $state );
+
 			$data = $this->prepare_item_for_request( $request );
 
 			if ( is_wp_error( $data ) ) {

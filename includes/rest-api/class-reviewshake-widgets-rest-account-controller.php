@@ -143,6 +143,14 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 * @return WP_Error|WP_REST_Response
 		 */
 		public function create_item( $request ) {
+			// Initialize state.
+			$state = array(
+				'source_url'  => reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ),
+				'source_name' => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
+			);
+
+			// Set state.
+			$set_state = reviewshake_save_settings( 'state', $state );
 
 			if ( $this->email && $this->account_domain ) {
 				$account                              = new stdClass();
@@ -215,6 +223,18 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 						)
 					);
 				}
+
+				$state = array(
+					'account_status'  => 'pending',
+					'source_status'   => 'pending',
+					'request_type'    => 'create_account',
+					'started_at'      => gmdate( 'Y-m-d H:i:s' ),
+					'request_no'      => 1,
+					'connection_type' => 'setup',
+				);
+
+				// Set state.
+				$set_state = reviewshake_save_settings( 'state', $state );
 
 				$response = $this->prepare_item_for_response( $account, $request, 'setup_tab' );
 
@@ -310,6 +330,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 				$save_account = reviewshake_save_settings( 'account', $prepared_account );
 
+				$state = array(
+					'account_status'  => 'on_hold',
+					'request_no'      => 2,
+					'request_type'    => 'get_account_status',
+					'connection_type' => 'setup',
+				);
+
+				// Set state.
+				$set_state = reviewshake_save_settings( 'state', $state );
+
 				$response = $this->prepare_item_for_response( $account, $request, 'setup_tab' );
 
 				return rest_ensure_response( $response );
@@ -400,6 +430,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 				$save_account = reviewshake_save_settings( 'account', $prepared_account );
 
+				$state = array(
+					'account_status'  => 'completed',
+					'request_type'    => 'get_account_info',
+					'request_no'      => 6,
+					'connection_type' => 'account',
+				);
+
+				// Set state.
+				$set_state = reviewshake_save_settings( 'state', $state );
+
 				$response = $this->prepare_item_for_response( $account, $request, 'account_tab' );
 
 				return rest_ensure_response( $response );
@@ -478,6 +518,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				}
 
 				$save_account = reviewshake_save_settings( 'account', $prepared_account );
+
+				$state = array(
+					'account_status'  => 'completed',
+					'request_type'    => 'add_free_plan',
+					'request_no'      => 3,
+					'connection_type' => 'setup',
+				);
+
+				// Set state.
+				$set_state = reviewshake_save_settings( 'state', $state );
 
 				$response = $this->prepare_item_for_response( $account, $request, 'setup_tab' );
 

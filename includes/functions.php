@@ -830,11 +830,11 @@ function reviewshake_save_settings( string $settings_key, $data, $override = fal
 				break;
 
 			case 'account':
+			case 'state':
 				foreach ( $data as $key => $value ) {
 					$settings[ $settings_key ][ $key ] = reviewshake_sanitize( $key, $value );
 				}
 				break;
-
 			default:
 				return false;
 		}
@@ -880,6 +880,8 @@ function reviewshake_sanitize( $key, $value ) {
 		case 'body_font_size':
 		case 'organization_id':
 		case 'title_font_weight':
+		case 'request_no':
+		case 'sec_to_sleep':
 			return absint( $value );
 
 		case 'ex_reviews_source':
@@ -953,6 +955,54 @@ function reviewshake_check_settings( $settings = null, $settings_type, $key ) {
 	}
 
 	return false;
+}
+
+/**
+ * Get account creation state.
+ *
+ * @since 1.0.0
+ *
+ * @return array $state
+ */
+function reviewshake_get_state() {
+	// Declare state array.
+	$state = array();
+
+	// Define supported keys.
+	$keys = array(
+		'account_status',
+		'source_status',
+		'connection_type',
+		'request_type',
+		'request_no',
+		'started_at',
+		'source_name',
+		'source_url',
+	);
+
+	// Get general settings.
+	$settings = get_option( 'reviewshake_widgets_settings', array() );
+
+	foreach ( $keys as $key ) {
+		$value         = reviewshake_check_settings( $settings, 'state', $key );
+		$state[ $key ] = $value ? reviewshake_sanitize( $key, $value ) : false;
+
+		if ( 'started_at' === $key && $value ) {
+			$sec_to_sleep = 0;
+
+			$started_at = new DateTime( reviewshake_sanitize( $key, $value ) );
+			$now        = new DateTime( gmdate( 'Y-m-d H:i:s' ) );
+			$diff       = $now->getTimestamp() - $started_at->getTimestamp();
+
+			if ( 20 >= $diff ) {
+				$sec_to_sleep = 20 - $diff;
+			}
+
+			$state['sec_to_sleep'] = reviewshake_sanitize( 'sec_to_sleep', $sec_to_sleep );
+		}
+	}
+
+	return (array) $state;
 }
 
 /**

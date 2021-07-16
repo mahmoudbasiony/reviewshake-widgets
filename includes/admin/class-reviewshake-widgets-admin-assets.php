@@ -81,6 +81,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Assets' ) ) :
 					'site_url'       => esc_url( get_site_url() ),
 					'wp_rest_nonce'  => wp_create_nonce( 'wp_rest' ),
 					'newAccountForm' => reviewshake_render_connect_account_form(),
+					'state'          => reviewshake_get_state(),
 					'closeButton'    => esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/close-button.svg' ),
 					'successIcon'    => esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/success-icon.svg' ),
 					'errorIcon'      => esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/error-icon.svg' ),
