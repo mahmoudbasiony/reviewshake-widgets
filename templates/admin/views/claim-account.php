@@ -26,8 +26,8 @@ $claim_link = reviewshake_check_settings( $settings, 'account', 'account_domain'
 			<input type=button class="button button-primary" id="claim-account" data-href="<?php echo $claim_link ? esc_url( $claim_link ) : ''; ?> " value="<?php esc_html_e( 'Claim Reviewshake Account', 'reviewshake-widgets' ); ?>"/>
 		</div>
 
-		<div class="connect-another-account">
-			<a href=""><?php esc_html_e( 'Connect existing account', 'reviewshake-widgets' ); ?></a>
+		<div class="connect-another-account-wrap">
+			<a class="connect-another-account" href=""><?php esc_html_e( 'Connect existing account', 'reviewshake-widgets' ); ?></a>
 		</div>
 
 	</div>
