@@ -567,7 +567,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					'type'              => 'string',
 					'validate_callback' => 'rest_validate_request_arg',
 					'sanitize_callback' => 'sanitize_text_field',
-					'default'           => base64_decode( 'cnMxMjM0NTY=' ),
+					'default'           => 'cnMxMjM0NTY=',
 				),
 				'subdomain' => array(
 					'description'       => esc_html__( 'The Reviewshake account subdomain.', 'reviewshake-widgets' ),
