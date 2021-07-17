@@ -217,7 +217,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 */
 		public function create_item( $request ) {
 			$state = array(
-				'source_status'   => 'completed',
+				'source_status'   => 'pending',
 				'request_type'    => 'create_review_source',
 				'request_no'      => 5,
 				'connection_type' => 'setup',
@@ -234,6 +234,13 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 			if ( function_exists( 'reviewshake_add_review_source' ) ) {
 				$review_source = reviewshake_add_review_source( $data );
+
+				$state = array(
+					'source_status' => 'completed',
+				);
+
+				// Set state.
+				$set_state = reviewshake_save_settings( 'state', $state );
 
 				// Validate errors.
 				if ( isset( $review_source->errors ) && is_array( $review_source->errors ) ) {

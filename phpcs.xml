@@ -12,7 +12,11 @@
 	<config name="testVersion" value="5.7.2" />
 
 	<!-- Rules -->
-	<rule ref="WordPress-Extra" />
+	<rule ref="WordPress-Extra">
+		<exclude name="WordPress.WP.EnqueuedResources" />
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName" />
+	</rule>
+
 	<rule ref="WordPress-Docs"/>
 	<rule ref="WordPress.WP.I18n">
 		<properties>

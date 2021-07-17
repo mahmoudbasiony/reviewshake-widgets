@@ -15,12 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 // General settings.
 $settings = get_option( 'reviewshake_widgets_settings', array() );
 
-// Get all the available review sources array.
-$review_sources = include_once 'sources/review-sources.php';
-
-// Sort review sources alphabetically.
-ksort( $review_sources );
-
 // Get the account subdomain.
 $subdomain = reviewshake_check_settings( $settings, 'account', 'subdomain' ) ? esc_attr( reviewshake_check_settings( $settings, 'account', 'subdomain' ) ) : esc_attr( reviewshake_get_subdomain_from_url() );
 

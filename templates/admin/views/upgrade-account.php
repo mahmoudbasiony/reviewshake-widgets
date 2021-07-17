@@ -30,7 +30,7 @@ $is_claimed = reviewshake_is_account_claimed( $current_plan );
 						$action_link = "https://{$subdomain}.reviewshake.com/admin/billing";
 						$text        = __( 'Upgrade your Reviewshake account', 'reviewshake-widgets' );
 
-						echo '<a href="' . esc_url( $action_link ) . '" target="_blank">' . esc_html( $text ) . '</a>';
+						echo '<a href="' . esc_url( $action_link ) . '" id="upgrade-setup-link">' . esc_html( $text ) . '</a>';
 					} else {
 						$action_link = 'admin.php?page=reviewshake-widgets&tab=account';
 						$text        = __( 'Connect your Reviewshake account', 'reviewshake-widgets' );

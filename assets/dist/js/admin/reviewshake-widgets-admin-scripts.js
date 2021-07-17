@@ -19,12 +19,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 		console.log(appState);
 		if (appState.hasOwnProperty('account_status') && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
-			console.log('Pending account status');
 			var form = $('#create_review_source_form');
 			var isAccountExists = form.data('account-exists');
 			var secToSleep = appState.sec_to_sleep;
 
-			console.log('sec To sleep ' + secToSleep);
+			console.log('Waiting' + secToSleep + ' seconds');
 
 			// Show Loader.
 			showLoader('reviewshake-widgets-setup-wrap', form);
@@ -57,8 +56,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		var source = form.find('select[name="source_name"] option:selected').val().toLowerCase();
 		var isAccountExists = form.data('account-exists');
 		var sourceID = parseInt(form.attr('data-review-source-id'));
-		var sourcesCount = parseInt(form.attr('data-sources-count'));
-		var pricingPlan = form.attr('data-pricing-plan');
 
 		// Define errors
 		var errors = false;
@@ -113,6 +110,37 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			// Delete review source.
 			deleteReviewSource(id, reviewSourceRow);
 		}
+	});
+
+	/*
+  * On click upgrade account button.
+  */
+	$(document).on('click', '#upgrade-setup-link', function (e) {
+		e.preventDefault();
+
+		var element = $(this);
+
+		// Open the upgrade link in a new tab.
+		var href = element.attr('href');
+		window.open(href, '_blank');
+
+		var data = {
+			'action': 'reviewshake_renders_review_source_form',
+			'nonce': reviewshake_widgets_params.nonce
+		};
+
+		getReviewSourceForm(data).then(function (result) {
+			if (result.success && result.hasOwnProperty('data') && result.data.hasOwnProperty('form')) {
+				var form = result.data.form;
+
+				// Hide the upgrade link and append the review source form.
+				element.closest('.review-sources-upgrade-table').hide();
+				element.closest('.reviewshake-widgets-review-sources-container').append(form);
+
+				// Set data requires upgrade to 1.
+				$('.create-review-source-form').attr('data-requires-upgrade', '1');
+			}
+		});
 	});
 
 	/*
@@ -323,6 +351,52 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 	});
 
 	/**
+  * Get widget create/edit form
+  *
+  * @param {object} data The object data to send to ajax
+  *
+  * @return {object|WP_Error}
+  */
+	var getReviewSourceForm = function () {
+		var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(data) {
+			var result;
+			return regeneratorRuntime.wrap(function _callee$(_context) {
+				while (1) {
+					switch (_context.prev = _context.next) {
+						case 0:
+							result = void 0;
+							_context.prev = 1;
+							_context.next = 4;
+							return $.ajax({
+								url: reviewshake_widgets_params.ajax_url,
+								type: 'POST',
+								data: data
+							});
+
+						case 4:
+							result = _context.sent;
+							return _context.abrupt('return', result);
+
+						case 8:
+							_context.prev = 8;
+							_context.t0 = _context['catch'](1);
+
+							console.error(_context.t0);
+
+						case 11:
+						case 'end':
+							return _context.stop();
+					}
+				}
+			}, _callee, undefined, [[1, 8]]);
+		}));
+
+		return function getReviewSourceForm(_x) {
+			return _ref.apply(this, arguments);
+		};
+	}();
+
+	/**
   * Get account info
   *
   * @param {string} subdomain The account subdomain.
@@ -331,13 +405,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var getAccountInfo = function () {
-		var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(subdomain, apiKey) {
+		var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(subdomain, apiKey) {
 			var getAccountResponse, responseJson, html;
-			return regeneratorRuntime.wrap(function _callee$(_context) {
+			return regeneratorRuntime.wrap(function _callee2$(_context2) {
 				while (1) {
-					switch (_context.prev = _context.next) {
+					switch (_context2.prev = _context2.next) {
 						case 0:
-							_context.next = 2;
+							_context2.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/' + apiKey + '/' + subdomain, {
 								method: 'GET',
 								headers: {
@@ -347,12 +421,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							getAccountResponse = _context.sent;
-							_context.next = 5;
+							getAccountResponse = _context2.sent;
+							_context2.next = 5;
 							return getAccountResponse.json();
 
 						case 5:
-							responseJson = _context.sent;
+							responseJson = _context2.sent;
 
 
 							if (responseJson.hasOwnProperty('data') && responseJson.data.hasOwnProperty('attributes')) {
@@ -366,14 +440,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 8:
 						case 'end':
-							return _context.stop();
+							return _context2.stop();
 					}
 				}
-			}, _callee, undefined);
+			}, _callee2, undefined);
 		}));
 
-		return function getAccountInfo(_x, _x2) {
-			return _ref.apply(this, arguments);
+		return function getAccountInfo(_x2, _x3) {
+			return _ref2.apply(this, arguments);
 		};
 	}();
 
@@ -385,15 +459,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return {object|WP_Error}
   */
 	var getWidgetForm = function () {
-		var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(data) {
+		var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(data) {
 			var result;
-			return regeneratorRuntime.wrap(function _callee2$(_context2) {
+			return regeneratorRuntime.wrap(function _callee3$(_context3) {
 				while (1) {
-					switch (_context2.prev = _context2.next) {
+					switch (_context3.prev = _context3.next) {
 						case 0:
 							result = void 0;
-							_context2.prev = 1;
-							_context2.next = 4;
+							_context3.prev = 1;
+							_context3.next = 4;
 							return $.ajax({
 								url: reviewshake_widgets_params.ajax_url,
 								type: 'POST',
@@ -401,25 +475,25 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 4:
-							result = _context2.sent;
-							return _context2.abrupt('return', result);
+							result = _context3.sent;
+							return _context3.abrupt('return', result);
 
 						case 8:
-							_context2.prev = 8;
-							_context2.t0 = _context2['catch'](1);
+							_context3.prev = 8;
+							_context3.t0 = _context3['catch'](1);
 
-							console.error(_context2.t0);
+							console.error(_context3.t0);
 
 						case 11:
 						case 'end':
-							return _context2.stop();
+							return _context3.stop();
 					}
 				}
-			}, _callee2, undefined, [[1, 8]]);
+			}, _callee3, undefined, [[1, 8]]);
 		}));
 
-		return function getWidgetForm(_x3) {
-			return _ref2.apply(this, arguments);
+		return function getWidgetForm(_x4) {
+			return _ref3.apply(this, arguments);
 		};
 	}();
 
@@ -432,11 +506,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var updateWidget = function () {
-		var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(form, formData) {
+		var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(form, formData) {
 			var widgetID, updateWidgetResponse, responseJson, embed, message, detail;
-			return regeneratorRuntime.wrap(function _callee3$(_context3) {
+			return regeneratorRuntime.wrap(function _callee4$(_context4) {
 				while (1) {
-					switch (_context3.prev = _context3.next) {
+					switch (_context4.prev = _context4.next) {
 						case 0:
 							// Show preview loader.
 							showPreviewLoader();
@@ -445,7 +519,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 							// Send the update widget request to rest API.
 
-							_context3.next = 4;
+							_context4.next = 4;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/' + widgetID, {
 								method: 'PUT',
 								headers: {
@@ -456,12 +530,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 4:
-							updateWidgetResponse = _context3.sent;
-							_context3.next = 7;
+							updateWidgetResponse = _context4.sent;
+							_context4.next = 7;
 							return updateWidgetResponse.json();
 
 						case 7:
-							responseJson = _context3.sent;
+							responseJson = _context4.sent;
 
 
 							console.log(responseJson);
@@ -494,14 +568,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 12:
 						case 'end':
-							return _context3.stop();
+							return _context4.stop();
 					}
 				}
-			}, _callee3, undefined);
+			}, _callee4, undefined);
 		}));
 
-		return function updateWidget(_x4, _x5) {
-			return _ref3.apply(this, arguments);
+		return function updateWidget(_x5, _x6) {
+			return _ref4.apply(this, arguments);
 		};
 	}();
 
@@ -514,17 +588,17 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var createWidget = function () {
-		var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(form, formData) {
+		var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(form, formData) {
 			var createWidgetResponse, responseJson, embed, widgetID, message, detail;
-			return regeneratorRuntime.wrap(function _callee4$(_context4) {
+			return regeneratorRuntime.wrap(function _callee5$(_context5) {
 				while (1) {
-					switch (_context4.prev = _context4.next) {
+					switch (_context5.prev = _context5.next) {
 						case 0:
 							// Show preview loader.
 							showPreviewLoader();
 
 							// Send the create widget request to rest API.
-							_context4.next = 3;
+							_context5.next = 3;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets', {
 								method: 'POST',
 								headers: {
@@ -535,12 +609,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 3:
-							createWidgetResponse = _context4.sent;
-							_context4.next = 6;
+							createWidgetResponse = _context5.sent;
+							_context5.next = 6;
 							return createWidgetResponse.json();
 
 						case 6:
-							responseJson = _context4.sent;
+							responseJson = _context5.sent;
 
 
 							console.log(responseJson);
@@ -579,14 +653,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 11:
 						case 'end':
-							return _context4.stop();
+							return _context5.stop();
 					}
 				}
-			}, _callee4, undefined);
+			}, _callee5, undefined);
 		}));
 
-		return function createWidget(_x6, _x7) {
-			return _ref4.apply(this, arguments);
+		return function createWidget(_x7, _x8) {
+			return _ref5.apply(this, arguments);
 		};
 	}();
 
@@ -599,13 +673,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var deleteWidget = function () {
-		var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(widgetID, widget) {
+		var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(widgetID, widget) {
 			var deleteWidgetResponse, responseJson, html, message, detail;
-			return regeneratorRuntime.wrap(function _callee5$(_context5) {
+			return regeneratorRuntime.wrap(function _callee6$(_context6) {
 				while (1) {
-					switch (_context5.prev = _context5.next) {
+					switch (_context6.prev = _context6.next) {
 						case 0:
-							_context5.next = 2;
+							_context6.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/' + widgetID, {
 								method: 'DELETE',
 								headers: {
@@ -615,12 +689,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							deleteWidgetResponse = _context5.sent;
-							_context5.next = 5;
+							deleteWidgetResponse = _context6.sent;
+							_context6.next = 5;
 							return deleteWidgetResponse.json();
 
 						case 5:
-							responseJson = _context5.sent;
+							responseJson = _context6.sent;
 
 
 							if (deleteWidgetResponse.ok && responseJson.deleted) {
@@ -650,14 +724,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 10:
 						case 'end':
-							return _context5.stop();
+							return _context6.stop();
 					}
 				}
-			}, _callee5, undefined);
+			}, _callee6, undefined);
 		}));
 
-		return function deleteWidget(_x8, _x9) {
-			return _ref5.apply(this, arguments);
+		return function deleteWidget(_x9, _x10) {
+			return _ref6.apply(this, arguments);
 		};
 	}();
 
@@ -670,13 +744,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var deleteReviewSource = function () {
-		var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(sourceID, reviewSource) {
+		var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(sourceID, reviewSource) {
 			var deleteSourceResponse, responseJson, html, message, detail;
-			return regeneratorRuntime.wrap(function _callee6$(_context6) {
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
 				while (1) {
-					switch (_context6.prev = _context6.next) {
+					switch (_context7.prev = _context7.next) {
 						case 0:
-							_context6.next = 2;
+							_context7.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/review_sources/' + sourceID, {
 								method: 'DELETE',
 								headers: {
@@ -686,12 +760,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							deleteSourceResponse = _context6.sent;
-							_context6.next = 5;
+							deleteSourceResponse = _context7.sent;
+							_context7.next = 5;
 							return deleteSourceResponse.json();
 
 						case 5:
-							responseJson = _context6.sent;
+							responseJson = _context7.sent;
 
 
 							if (responseJson.deleted) {
@@ -723,14 +797,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 9:
 						case 'end':
-							return _context6.stop();
+							return _context7.stop();
 					}
 				}
-			}, _callee6, undefined);
+			}, _callee7, undefined);
 		}));
 
-		return function deleteReviewSource(_x10, _x11) {
-			return _ref6.apply(this, arguments);
+		return function deleteReviewSource(_x11, _x12) {
+			return _ref7.apply(this, arguments);
 		};
 	}();
 
@@ -745,14 +819,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var createAccount = function () {
-		var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(source, sourceUrl, form, isAccountExists) {
+		var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(source, sourceUrl, form, isAccountExists) {
 			var secToSleep = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
 
 			var sourcesCount, pricingPlan, body, createAccountResponse, createAccountJson, attributes, accountDomain, email, tryGetAccount, listWidgetsJson, _body2, addReviewSources;
 
-			return regeneratorRuntime.wrap(function _callee8$(_context8) {
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
-					switch (_context8.prev = _context8.next) {
+					switch (_context9.prev = _context9.next) {
 						case 0:
 							sourcesCount = parseInt(form.attr('data-sources-count'));
 							pricingPlan = form.attr('data-pricing-plan');
@@ -769,7 +843,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         */
 
 							if (!(isAccountExists.length <= 0)) {
-								_context8.next = 22;
+								_context9.next = 22;
 								break;
 							}
 
@@ -780,7 +854,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 							// Send the create new account request to rest API 
 
-							_context8.next = 7;
+							_context9.next = 7;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/', {
 								method: 'POST',
 								headers: {
@@ -791,12 +865,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 7:
-							createAccountResponse = _context8.sent;
-							_context8.next = 10;
+							createAccountResponse = _context9.sent;
+							_context9.next = 10;
 							return createAccountResponse.json();
 
 						case 10:
-							createAccountJson = _context8.sent;
+							createAccountJson = _context9.sent;
 
 							console.log(createAccountJson);
 							attributes = createAccountJson.data.attributes;
@@ -807,7 +881,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							console.log('beforeSleep');
 
 							// Wait for x seconds to get account created.
-							_context8.next = 18;
+							_context9.next = 18;
 							return new Promise(function (resolve) {
 								return isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve();
 							});
@@ -817,14 +891,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							console.log('afterSleep');
 
 							// Set interval every 5 seconds to check account fully created.
-							tryGetAccount = setInterval(_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7() {
+							tryGetAccount = setInterval(_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {
 								var getAccountResponse, getAccountJson, _attributes, id, type, apiKey, _accountDomain, convertToFree, listWidgetsJson, count, _body, addReviewSources;
 
-								return regeneratorRuntime.wrap(function _callee7$(_context7) {
+								return regeneratorRuntime.wrap(function _callee8$(_context8) {
 									while (1) {
-										switch (_context7.prev = _context7.next) {
+										switch (_context8.prev = _context8.next) {
 											case 0:
-												_context7.next = 2;
+												_context8.next = 2;
 												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/?' + new URLSearchParams({
 													email: email
 												}), {
@@ -836,15 +910,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												});
 
 											case 2:
-												getAccountResponse = _context7.sent;
-												_context7.next = 5;
+												getAccountResponse = _context8.sent;
+												_context8.next = 5;
 												return getAccountResponse.json();
 
 											case 5:
-												getAccountJson = _context7.sent;
+												getAccountJson = _context8.sent;
 
 												if (!(getAccountJson.hasOwnProperty('data') && getAccountJson.data.hasOwnProperty('attributes'))) {
-													_context7.next = 35;
+													_context8.next = 35;
 													break;
 												}
 
@@ -864,11 +938,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												// If account is on trial plan.
 
 												if (!('' == pricingPlan || 'trial' === pricingPlan)) {
-													_context7.next = 20;
+													_context8.next = 20;
 													break;
 												}
 
-												_context7.next = 18;
+												_context8.next = 18;
 												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/' + apiKey + '/' + _accountDomain, {
 													method: 'PUT',
 													headers: {
@@ -878,7 +952,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												});
 
 											case 18:
-												convertToFree = _context7.sent;
+												convertToFree = _context8.sent;
 
 												console.log('Account get a free plan');
 
@@ -886,14 +960,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 												console.log('after trial api');
 
-												_context7.next = 23;
+												_context8.next = 23;
 												return listWidgets();
 
 											case 23:
-												listWidgetsJson = _context7.sent;
+												listWidgetsJson = _context8.sent;
 
 												if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-													_context7.next = 34;
+													_context8.next = 34;
 													break;
 												}
 
@@ -913,14 +987,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												/**
              * Adds the review source to the currently created account.
              *
-             * @param {object} body - The request body.
+             * @param {object}  body - The request body.
+             * @param {element} form - The create review source form.
              */
 
-												_context7.next = 31;
-												return addReviewSource(_body);
+												_context8.next = 31;
+												return addReviewSource(_body, form);
 
 											case 31:
-												addReviewSources = _context7.sent;
+												addReviewSources = _context8.sent;
 
 
 												// Wp Color Picker.
@@ -935,23 +1010,23 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 											case 35:
 											case 'end':
-												return _context7.stop();
+												return _context8.stop();
 										}
 									}
-								}, _callee7, undefined);
+								}, _callee8, undefined);
 							})), 5000);
-							_context8.next = 32;
+							_context9.next = 32;
 							break;
 
 						case 22:
-							_context8.next = 24;
+							_context9.next = 24;
 							return listWidgets();
 
 						case 24:
-							listWidgetsJson = _context8.sent;
+							listWidgetsJson = _context9.sent;
 
 							if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-								_context8.next = 32;
+								_context9.next = 32;
 								break;
 							}
 
@@ -965,14 +1040,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							/**
         * Adds the review source to the currently created account.
         *
-        * @param {object} body - The request body.
+        * @param {object}  body - The request body.
+        * @param {element} form - The create review source form.
         */
 
-							_context8.next = 29;
-							return addReviewSource(_body2);
+							_context9.next = 29;
+							return addReviewSource(_body2, form);
 
 						case 29:
-							addReviewSources = _context8.sent;
+							addReviewSources = _context9.sent;
 
 
 							// Wp Color Picker.
@@ -983,30 +1059,31 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 32:
 						case 'end':
-							return _context8.stop();
+							return _context9.stop();
 					}
 				}
-			}, _callee8, undefined);
+			}, _callee9, undefined);
 		}));
 
-		return function createAccount(_x13, _x14, _x15, _x16) {
-			return _ref7.apply(this, arguments);
+		return function createAccount(_x14, _x15, _x16, _x17) {
+			return _ref8.apply(this, arguments);
 		};
 	}();
 
 	/**
   * Add review source to reviewshake account.
   *
-  * @param {object} body - The create review source request body.
+  * @param {object}  body - The create review source request body.
+  * @param {element} form - The create review source form.
   */
 	var addReviewSource = function () {
-		var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(body) {
-			var addReviewSource, reviewSourceJson, html, successTitle, successMessage, message, detail;
-			return regeneratorRuntime.wrap(function _callee9$(_context9) {
+		var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(body, form) {
+			var addReviewSource, reviewSourceJson, html, successTitle, successMessage, requireUpgrade, message, detail;
+			return regeneratorRuntime.wrap(function _callee10$(_context10) {
 				while (1) {
-					switch (_context9.prev = _context9.next) {
+					switch (_context10.prev = _context10.next) {
 						case 0:
-							_context9.next = 2;
+							_context10.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/review_sources/', {
 								method: 'POST',
 								headers: {
@@ -1017,12 +1094,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							addReviewSource = _context9.sent;
-							_context9.next = 5;
+							addReviewSource = _context10.sent;
+							_context10.next = 5;
 							return addReviewSource.json();
 
 						case 5:
-							reviewSourceJson = _context9.sent;
+							reviewSourceJson = _context10.sent;
 
 
 							if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode) {
@@ -1040,8 +1117,18 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 								postscribe('#reviewshake-tab-setup', html);
 							} else {
-								console.log(reviewSourceJson);
+								// Show the setup tab wrap.
 								$('.reviewshake-widgets-setup-wrap').show();
+
+								// Get the requires upgrade data attribute.
+								requireUpgrade = form.attr('data-requires-upgrade');
+
+								// If it is a require upgrade form.
+
+								if (requireUpgrade && '1' === requireUpgrade) {
+									form.remove();
+									$('.review-sources-upgrade-table').show();
+								}
 
 								if (!addReviewSource.ok && reviewSourceJson.hasOwnProperty('message') && reviewSourceJson.hasOwnProperty('data')) {
 									message = reviewSourceJson.message;
@@ -1054,14 +1141,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 7:
 						case 'end':
-							return _context9.stop();
+							return _context10.stop();
 					}
 				}
-			}, _callee9, undefined);
+			}, _callee10, undefined);
 		}));
 
-		return function addReviewSource(_x17) {
-			return _ref9.apply(this, arguments);
+		return function addReviewSource(_x18, _x19) {
+			return _ref10.apply(this, arguments);
 		};
 	}();
 
@@ -1071,13 +1158,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return {JSON} listWidgetsJson.
   */
 	var listWidgets = function () {
-		var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {
+		var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {
 			var listWidgets, listWidgetsJson;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
-					switch (_context10.prev = _context10.next) {
+					switch (_context11.prev = _context11.next) {
 						case 0:
-							_context10.next = 2;
+							_context11.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/', {
 								method: 'GET',
 								headers: {
@@ -1087,57 +1174,16 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							listWidgets = _context10.sent;
+							listWidgets = _context11.sent;
 
 							console.log('Inside List');
 							// Get the widgets response json
-							_context10.next = 6;
+							_context11.next = 6;
 							return listWidgets.json();
 
 						case 6:
-							listWidgetsJson = _context10.sent;
-							return _context10.abrupt('return', listWidgetsJson);
-
-						case 8:
-						case 'end':
-							return _context10.stop();
-					}
-				}
-			}, _callee10, undefined);
-		}));
-
-		return function listWidgets() {
-			return _ref10.apply(this, arguments);
-		};
-	}();
-
-	/**
-  * 
-  */
-	var listWidgetsAddReviewSource = function () {
-		var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(body) {
-			var listWidgetsJson, addReviewSources;
-			return regeneratorRuntime.wrap(function _callee11$(_context11) {
-				while (1) {
-					switch (_context11.prev = _context11.next) {
-						case 0:
-							_context11.next = 2;
-							return listWidgets();
-
-						case 2:
 							listWidgetsJson = _context11.sent;
-							_context11.next = 5;
-							return addReviewSource(body);
-
-						case 5:
-							addReviewSources = _context11.sent;
-
-
-							// Wp Color Picker.
-							$('.color_field').wpColorPicker();
-
-							// Hide Loader.
-							hideLoader();
+							return _context11.abrupt('return', listWidgetsJson);
 
 						case 8:
 						case 'end':
@@ -1147,7 +1193,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			}, _callee11, undefined);
 		}));
 
-		return function listWidgetsAddReviewSource(_x18) {
+		return function listWidgets() {
 			return _ref11.apply(this, arguments);
 		};
 	}();

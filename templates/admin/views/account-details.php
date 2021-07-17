@@ -60,7 +60,7 @@ $review_source_limit = reviewshake_get_review_sources_limit( $current_plan_data 
 <div class="account-links-wrap">
 	<div class="setup-review-sources-widgets">
 		<a href="admin.php?page=reviewshake-widgets&tab=setup">
-			<input type="button" class="button button-primary" value="<?php esc_attr_e( 'Setup Review Sources and Widgets', 'reviewshake-widgets' ); ?>" />
+			<input type="button" class="button button-primary setup-sources-and-widgets" value="<?php esc_attr_e( 'Setup Review Sources and Widgets', 'reviewshake-widgets' ); ?>" />
 		</a>
 	
 	</div>

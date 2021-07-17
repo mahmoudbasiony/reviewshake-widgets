@@ -143,15 +143,9 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 * @return WP_Error|WP_REST_Response
 		 */
 		public function create_item( $request ) {
-			// Initialize state.
-			$state = array(
-				'source_url'  => reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ),
-				'source_name' => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
-			);
-
-			// Set state.
-			$set_state = reviewshake_save_settings( 'state', $state );
-
+			/**
+			 * Validates account exists.
+			 */
 			if ( $this->email && $this->account_domain ) {
 				$account                              = new stdClass();
 				$account->data->attributes->email     = $this->email;
@@ -161,6 +155,17 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 				return rest_ensure_response( $response );
 			}
+
+			// Initialize state.
+			$state = array(
+				'source_url'  => reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ),
+				'source_name' => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
+				'account_status'  => 'pending',
+				'source_status'   => 'pending',
+			);
+
+			// Set state.
+			$set_state = reviewshake_save_settings( 'state', $state );
 
 			/**
 			 * Create new reviewshake account.
@@ -225,8 +230,6 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				}
 
 				$state = array(
-					'account_status'  => 'pending',
-					'source_status'   => 'pending',
 					'request_type'    => 'create_account',
 					'started_at'      => gmdate( 'Y-m-d H:i:s' ),
 					'request_no'      => 1,

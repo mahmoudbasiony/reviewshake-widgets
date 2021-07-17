@@ -19,7 +19,7 @@
 			let isAccountExists = form.data('account-exists');
 			let secToSleep = appState.sec_to_sleep;
 
-			console.log('sec To sleep ' + secToSleep);
+			console.log('Waiting' + secToSleep +' seconds');
 
 			// Show Loader.
 			showLoader('reviewshake-widgets-setup-wrap', form);
@@ -52,8 +52,6 @@
 		let source = form.find('select[name="source_name"] option:selected').val().toLowerCase();
 		let isAccountExists = form.data('account-exists');
 		let sourceID = parseInt( form.attr('data-review-source-id') );
-		let sourcesCount = parseInt( form.attr('data-sources-count') );
-		let pricingPlan  = form.attr('data-pricing-plan');
 
 		// Define errors
 		let errors = false;
@@ -109,6 +107,37 @@
 			deleteReviewSource(id, reviewSourceRow);
 		}
 	} );
+
+	/*
+	 * On click upgrade account button.
+	 */
+	$(document).on('click', '#upgrade-setup-link', function(e) {
+		e.preventDefault();
+
+		let element = $(this);
+
+		// Open the upgrade link in a new tab.
+		let href = element.attr('href');
+		window.open( href, '_blank' );
+
+		let data = {
+			'action' : 'reviewshake_renders_review_source_form',
+			'nonce' : reviewshake_widgets_params.nonce,
+		};
+
+		getReviewSourceForm(data).then(result => {
+			if(result.success && result.hasOwnProperty('data') && result.data.hasOwnProperty('form')) {
+				let form = result.data.form;
+
+				// Hide the upgrade link and append the review source form.
+				element.closest('.review-sources-upgrade-table').hide();
+				element.closest('.reviewshake-widgets-review-sources-container').append(form);
+
+				// Set data requires upgrade to 1.
+				$('.create-review-source-form').attr('data-requires-upgrade', '1');
+			}
+		});
+	});
 
 	/*
 	 * On click delete widget button.
@@ -316,6 +345,28 @@
 
 		e.preventDefault();
 	});
+
+	/**
+	 * Get widget create/edit form
+	 *
+	 * @param {object} data The object data to send to ajax
+	 *
+	 * @return {object|WP_Error}
+	 */
+	const getReviewSourceForm = async(data) => {
+		let result;
+		try {
+			result = await $.ajax({
+				url: reviewshake_widgets_params.ajax_url,
+				type: 'POST',
+				data: data
+			});
+
+			return result;
+		} catch (error) {
+			console.error(error);
+		}
+	};
 
 	/**
 	 * Get account info
@@ -685,9 +736,10 @@
 						/**
 						 * Adds the review source to the currently created account.
 						 *
-						 * @param {object} body - The request body.
+						 * @param {object}  body - The request body.
+						 * @param {element} form - The create review source form.
 						 */
-						const addReviewSources = await addReviewSource(body);
+						const addReviewSources = await addReviewSource(body, form);
 	
 						// Wp Color Picker.
 						$( '.color_field' ).wpColorPicker();
@@ -716,9 +768,10 @@
 				/**
 				 * Adds the review source to the currently created account.
 				 *
-				 * @param {object} body - The request body.
+				 * @param {object}  body - The request body.
+				 * @param {element} form - The create review source form.
 				 */
-				const addReviewSources = await addReviewSource(body);
+				const addReviewSources = await addReviewSource(body, form);
 
 				// Wp Color Picker.
 				$( '.color_field' ).wpColorPicker();
@@ -732,9 +785,10 @@
 	/**
 	 * Add review source to reviewshake account.
 	 *
-	 * @param {object} body - The create review source request body.
+	 * @param {object}  body - The create review source request body.
+	 * @param {element} form - The create review source form.
 	 */
-	const addReviewSource = async(body) => {
+	const addReviewSource = async(body, form) => {
 		// Send add review source request to rest API
 		const addReviewSource = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/review_sources/', {
 			method: 'POST',
@@ -763,8 +817,17 @@
 
 			postscribe('#reviewshake-tab-setup', html);
 		} else {
-			console.log(reviewSourceJson);
+			// Show the setup tab wrap.
 			$('.reviewshake-widgets-setup-wrap').show();
+
+			// Get the requires upgrade data attribute.
+			let requireUpgrade = form.attr('data-requires-upgrade');
+
+			// If it is a require upgrade form.
+			if (requireUpgrade && '1' === requireUpgrade) {
+				form.remove();
+				$('.review-sources-upgrade-table').show();
+			}
 
 			if (!addReviewSource.ok && reviewSourceJson.hasOwnProperty('message') && reviewSourceJson.hasOwnProperty('data') ) {
 				let message = reviewSourceJson.message;
@@ -794,29 +857,6 @@
 		const listWidgetsJson = await listWidgets.json();
 
 		return listWidgetsJson;
-	};
-
-	/**
-	 * 
-	 */
-	const listWidgetsAddReviewSource = async(body) => {
-		/**
-		 * List the available widgets for the account.
-		 */
-		const listWidgetsJson = await listWidgets();
-
-		/**
-		 * Adds the review source to the currently created account.
-		 *
-		 * @param {object} body - The request body.
-		 */
-		const addReviewSources = await addReviewSource(body);
-
-		// Wp Color Picker.
-		$( '.color_field' ).wpColorPicker();
-
-		// Hide Loader.
-		hideLoader();
 	};
 
 	/**

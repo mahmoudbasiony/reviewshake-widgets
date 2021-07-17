@@ -11,6 +11,19 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
+
+$is_account_exists   = reviewshake_is_account_exist_in_db();
+$settings = get_option( 'reviewshake_widgets_settings', array() );
+$review_sources_db   = isset( $settings['review_sources'] ) ? $settings['review_sources'] : array();
+$review_source_count = isset( $review_sources_db ) ? count( $review_sources_db ) : 0;
+$current_plan        = reviewshake_get_current_pricing_plan();
+
+// Get all the available review sources array.
+$review_sources = include_once REVIEWSHAKE_WIDGETS_TEMPLATES_PATH . 'admin/sources/review-sources.php';
+
+// Sort review sources alphabetically.
+ksort( $review_sources );
+
 ?>
 
 <div class="wrap reviewshake-review-sources-create-wrap">

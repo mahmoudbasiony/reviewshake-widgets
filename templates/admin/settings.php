@@ -14,7 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 $plugin_tabs = array( 'setup', 'account' );
 
 // Current tab.
-$plugin_tab = isset( $_GET['tab'] ) && in_array( $_GET['tab'], $plugin_tabs ) ? sanitize_text_field( $_GET['tab'] ) : 'setup';
+$plugin_tab = isset( $_GET['tab'] ) && in_array( $_GET['tab'], $plugin_tabs, true ) ? sanitize_text_field( $_GET['tab'] ) : 'setup';
+
+/**
+ * Get the current account info.
+ */
+reviewshake_rest_get_account_info();
 
 if ( 'setup' === $plugin_tab ) {
 	/**
@@ -26,13 +31,6 @@ if ( 'setup' === $plugin_tab ) {
 	* Fetch widgets from api and save to db.
 	*/
 	reviewshake_rest_list_widgets();
-}
-
-if ( 'account' === $plugin_tab ) {
-	/**
-	 * Get the current account info.
-	 */
-	reviewshake_rest_get_account_info();
 }
 
 ?>
