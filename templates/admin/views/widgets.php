@@ -27,7 +27,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 		foreach ( $widgets as $widget ) :
 			$widget_type = isset( $widget['widget_type'] ) ? $widget['widget_type'] : '';
 			$widget_name = isset( $widget['name'] ) ? $widget['name'] : '';
+			$updated_at  = isset( $widget['updated_at'] ) ? strtotime( sanitize_text_field( $widget['updated_at'] ) ) : 1;
 			$embed       = isset( $widget['embed'] ) ? $widget['embed'] : 'https://' . $settings['account']['account_domain'] . '/widgets/' . strtolower( $widget_type ) . '.js';
+			$embed      .= "?v={$updated_at}";
 			?>
 			<div class="reviewshake-widgets-widget section" data-widget-id="<?php echo isset( $widget['id'] ) ? esc_attr( $widget['id'] ) : 0; ?>">
 				<div class="widget-header">

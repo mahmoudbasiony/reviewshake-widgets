@@ -54,8 +54,8 @@ if ( class_exists( 'WP_Widget' ) ) {
 		 */
 		public function __construct() {
 			$args = array(
-				'classname'                   => 'reviewshake_widgets_widget',
-				'description'                 => __( 'Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites', 'reviewshake-widgets' ),
+				'classname'   => 'reviewshake_widgets_widget',
+				'description' => __( 'Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites', 'reviewshake-widgets' ),
 			);
 
 			parent::__construct( 'reviewshake_widgets_widget', __( 'Reviewshake - Reviews Widget.', 'reviewshake-widgets' ), $args );
@@ -84,8 +84,9 @@ if ( class_exists( 'WP_Widget' ) ) {
 
 			if ( $widget_id ) {
 				// Get the widget by ID to validate it's existence.
-				$widget = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key );
-				$embed  = '';
+				$widget     = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key );
+				$embed      = '';
+				$updated_at = 1;
 				if ( $widget && isset( $widget->body ) && ! empty( $widget->body ) ) {
 					$not_found = false;
 
@@ -98,9 +99,15 @@ if ( class_exists( 'WP_Widget' ) ) {
 
 						$embed = "https://{$this->account_domain}/widgets/{$widget_type}.js?org={$organization_id}";
 					}
+
+					// Get the updated at timestamp to use a version.
+					if ( isset( $widget->body->updated_at ) ) {
+						$updated_at = strtotime( sanitize_text_field( $widget->body->updated_at ) );
+					}
 				}
 
 				if ( $embed ) {
+					$embed .= "?v={$updated_at}";
 					echo '<script src="' . esc_url( $embed ) . '"></script>';
 				}
 			}
