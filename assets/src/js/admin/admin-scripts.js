@@ -10,11 +10,12 @@
 	 */
 	$(document).ready(function(){
 		const appState = reviewshake_widgets_params.state;
+		let tab = appState.tab;
 		let sourceName = appState.source_name;
-		let sourceUrl  = appState.source_url;
+		let sourceUrl = appState.source_url;
 
 		console.log(appState);
-		if (appState.hasOwnProperty('account_status') && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
+		if (tab && 'setup' === tab && sourceName && sourceUrl && appState.account_status && appState.source_status && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
 			let form = $('#create_review_source_form');
 			let isAccountExists = form.data('account-exists');
 			let secToSleep = appState.sec_to_sleep;
@@ -662,7 +663,7 @@
 
 			// Get the create account response json.
 			const createAccountJson = await createAccountResponse.json();
-			console.log(createAccountJson);
+
 			let attributes = createAccountJson.data.attributes;
 			let accountDomain = createAccountJson.data.links.account_domain;
 			let email = attributes.email;
@@ -852,7 +853,7 @@
 				'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce,
 			}
 		} );
-		console.log('Inside List');
+
 		// Get the widgets response json
 		const listWidgetsJson = await listWidgets.json();
 

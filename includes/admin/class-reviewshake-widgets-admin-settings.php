@@ -46,7 +46,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Settings' ) ) :
 				'manage_options',
 				'reviewshake-widgets',
 				array( $this, 'menu_page' ),
-				'dashicons-admin-tools'
+				'dashicons-admin-comments'
 			);
 		}
 

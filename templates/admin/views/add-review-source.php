@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $is_account_exists   = reviewshake_is_account_exist_in_db();
-$settings = get_option( 'reviewshake_widgets_settings', array() );
+$settings            = get_option( 'reviewshake_widgets_settings', array() );
 $review_sources_db   = isset( $settings['review_sources'] ) ? $settings['review_sources'] : array();
 $review_source_count = isset( $review_sources_db ) ? count( $review_sources_db ) : 0;
 $current_plan        = reviewshake_get_current_pricing_plan();
@@ -37,7 +37,7 @@ ksort( $review_sources );
 								<option value="" disabled selected><?php esc_html_e( 'Review Source', 'reviewshake-widgets' ); ?></option>
 
 								<?php foreach ( $review_sources as $source_key => $source ) : ?>
-									<option value="<?php echo esc_attr( stripslashes( $source_key ) ); ?>" data-placeholder-url="<?php echo isset( $source['source_url'] ) ? esc_url( $source['source_url'] ) : ''; ?>"><?php echo isset( $source['source_name'] ) ? esc_html( stripslashes( $source['source_name'] ) ) : ''; ?></option>
+									<option value="<?php echo esc_attr( stripslashes( $source_key ) ); ?>" data-placeholder-url="<?php echo isset( $source['source_url'] ) ? ( 'google' !== esc_attr( $source_key ) ? esc_url( $source['source_url'] ) : esc_attr( $source['source_url'] ) ) : ''; ?>"><?php echo isset( $source['source_name'] ) ? esc_html( stripslashes( $source['source_name'] ) ) : ''; ?></option>
 									<?php
 								endforeach;
 								endif;

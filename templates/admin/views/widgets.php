@@ -18,6 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="section reviewshake-widgets-widgets" id="reviewshake-widgets-widgets">
 	<h2 class="headline"><?php esc_html_e( 'Widgets', 'reviewshake-widgets' ); ?></h2>
 
+	<div class="add-widget-to-site">
+		<a href="<?php echo esc_url( admin_url( 'widgets.php' ) ); ?>" class="appearance-widgets-link"><?php esc_html_e( 'Add a widget to your site?', 'reviewshake-widgets' ); ?></a>
+	</div>
+
 	<div class="reviewshake-widgets-widgets-container">
 		<?php
 		foreach ( $widgets as $widget ) :

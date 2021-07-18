@@ -158,10 +158,10 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 			// Initialize state.
 			$state = array(
-				'source_url'  => reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ),
-				'source_name' => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
-				'account_status'  => 'pending',
-				'source_status'   => 'pending',
+				'source_url'     => 'google' !== $source_name ? reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ) : reviewshake_sanitize( 'source_url_text', $request->get_param( 'sourceUrl' ) ),
+				'source_name'    => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
+				'account_status' => 'pending',
+				'source_status'  => 'pending',
 			);
 
 			// Set state.
@@ -474,6 +474,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				$claimed_at   = reviewshake_check_settings( $this->settings, 'account', 'claimed_at' );
 
 				if ( $pricing_plan && 'trial' !== $pricing_plan ) {
+					$state = array(
+						'account_status'  => 'completed',
+						'request_type'    => 'add_free_plan',
+						'request_no'      => 3,
+						'connection_type' => 'setup',
+					);
+
+					// Set state.
+					$set_state = reviewshake_save_settings( 'state', $state );
+
 					$response = new WP_REST_Response( true, 200 );
 					return rest_ensure_response( $response );
 				}

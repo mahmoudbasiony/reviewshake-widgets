@@ -95,8 +95,8 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 				$result = array();
 
 				// Append result to result array.
-				$result['form']      = $form;
-				$result['status']    = 200;
+				$result['form']   = $form;
+				$result['status'] = 200;
 
 				// Send the json success.
 				wp_send_json_success( $result );

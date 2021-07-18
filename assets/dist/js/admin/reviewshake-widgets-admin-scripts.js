@@ -14,11 +14,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   */
 	$(document).ready(function () {
 		var appState = reviewshake_widgets_params.state;
+		var tab = appState.tab;
 		var sourceName = appState.source_name;
 		var sourceUrl = appState.source_url;
 
 		console.log(appState);
-		if (appState.hasOwnProperty('account_status') && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
+		if (tab && 'setup' === tab && sourceName && sourceUrl && appState.account_status && appState.source_status && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
 			var form = $('#create_review_source_form');
 			var isAccountExists = form.data('account-exists');
 			var secToSleep = appState.sec_to_sleep;
@@ -843,7 +844,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         */
 
 							if (!(isAccountExists.length <= 0)) {
-								_context9.next = 22;
+								_context9.next = 21;
 								break;
 							}
 
@@ -871,8 +872,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 10:
 							createAccountJson = _context9.sent;
-
-							console.log(createAccountJson);
 							attributes = createAccountJson.data.attributes;
 							accountDomain = createAccountJson.data.links.account_domain;
 							email = attributes.email;
@@ -881,12 +880,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							console.log('beforeSleep');
 
 							// Wait for x seconds to get account created.
-							_context9.next = 18;
+							_context9.next = 17;
 							return new Promise(function (resolve) {
 								return isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve();
 							});
 
-						case 18:
+						case 17:
 
 							console.log('afterSleep');
 
@@ -1015,18 +1014,18 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 									}
 								}, _callee8, undefined);
 							})), 5000);
-							_context9.next = 32;
+							_context9.next = 31;
 							break;
 
-						case 22:
-							_context9.next = 24;
+						case 21:
+							_context9.next = 23;
 							return listWidgets();
 
-						case 24:
+						case 23:
 							listWidgetsJson = _context9.sent;
 
 							if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-								_context9.next = 32;
+								_context9.next = 31;
 								break;
 							}
 
@@ -1044,10 +1043,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         * @param {element} form - The create review source form.
         */
 
-							_context9.next = 29;
+							_context9.next = 28;
 							return addReviewSource(_body2, form);
 
-						case 29:
+						case 28:
 							addReviewSources = _context9.sent;
 
 
@@ -1057,7 +1056,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							// Hide Loader.
 							hideLoader();
 
-						case 32:
+						case 31:
 						case 'end':
 							return _context9.stop();
 					}
@@ -1175,17 +1174,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 2:
 							listWidgets = _context11.sent;
-
-							console.log('Inside List');
-							// Get the widgets response json
-							_context11.next = 6;
+							_context11.next = 5;
 							return listWidgets.json();
 
-						case 6:
+						case 5:
 							listWidgetsJson = _context11.sent;
 							return _context11.abrupt('return', listWidgetsJson);
 
-						case 8:
+						case 7:
 						case 'end':
 							return _context11.stop();
 					}

@@ -40,7 +40,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Assets' ) ) :
 		 * @return void
 		 */
 		public function scripts() {
-			$current_page = sanitize_text_field( $_GET['page'] );
+			$current_page = isset( $_GET ) && isset( $_GET['page'] ) ? sanitize_text_field( $_GET['page'] ) : '';
 			if ( empty( $current_page ) || 'reviewshake-widgets' !== $current_page ) {
 				return;
 			}

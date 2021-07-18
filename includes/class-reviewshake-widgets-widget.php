@@ -56,7 +56,6 @@ if ( class_exists( 'WP_Widget' ) ) {
 			$args = array(
 				'classname'                   => 'reviewshake_widgets_widget',
 				'description'                 => __( 'Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites', 'reviewshake-widgets' ),
-				'customize_selective_refresh' => true,
 			);
 
 			parent::__construct( 'reviewshake_widgets_widget', __( 'Reviewshake - Reviews Widget.', 'reviewshake-widgets' ), $args );
@@ -114,7 +113,7 @@ if ( class_exists( 'WP_Widget' ) ) {
 				$setup_url   = admin_url( 'admin.php?page=reviewshake-widgets&tab=setup' );
 
 				/* translators: 1) string URL to setup displayed widget 2) string URL to create a new widget. */
-				printf( esc_html__( 'Widget is not found. Go to %1$s to select a Reviewshake widget, or go to %2$s to create a new one.', 'reviewshake-widgets' ), '<a href="' . esc_url( $widgets_url ) . '">' . esc_html( 'Widgets', 'reviewshake-widgets' ) . '</a>', '<a href="' . esc_url( $setup_url ) . '">' . esc_html( 'Setup', 'reviewshake-widgets' ) . '</a>' );
+				echo wp_kses_post( '<p>' . sprintf( __( 'Widget is not found. Go to <a href="%1$s">Widgets</a> to select a Reviewshake widget, or go to <a href="%2$s">Setup</a> to create a new one.', 'reviewshake-widgets' ), esc_url( $widgets_url ), esc_url( $setup_url ) ) . '</p>' );
 
 			}
 
@@ -162,16 +161,14 @@ if ( class_exists( 'WP_Widget' ) ) {
 					</select>
 				</p>
 
-			<?php else : ?>
-				<p class="reviewshake-widgets-no-widget-message">
 				<?php
-					$setup_url = admin_url( 'admin.php?page=reviewshake-widgets&tab=setup' );
+			else :
 
-					/* translators: %s: URL to create a new widget. */
-					printf( esc_html__( 'No widgets have been created yet. Go to %s page to setup widgets.', 'reviewshake-widgets' ), '<a href="' . esc_url( $setup_url ) . '">' . esc_html__( 'Setup', 'reviewshake-widgets' ) . '</a>' );
-				?>
-			</p>
-				<?php
+				$setup_url = admin_url( 'admin.php?page=reviewshake-widgets&tab=setup' );
+
+				/* translators: %s: URL to create a new widget. */
+				echo wp_kses_post( '<p>' . sprintf( __( 'No widgets have been created yet. Go to <a href="%s">Setup</a> page to create widgets.', 'reviewshake-widgets' ), esc_url( $setup_url ) ) . '</p>' );
+
 			endif;
 		}
 	}

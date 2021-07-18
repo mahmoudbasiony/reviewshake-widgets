@@ -861,6 +861,7 @@ function reviewshake_sanitize( $key, $value ) {
 			return sanitize_email( $value );
 
 		case 'account_domain':
+		case 'source_url_text':
 			return sanitize_text_field( $value );
 
 		case 'source_url':
@@ -970,6 +971,7 @@ function reviewshake_get_state() {
 
 	// Define supported keys.
 	$keys = array(
+		'tab',
 		'account_status',
 		'source_status',
 		'connection_type',
@@ -983,9 +985,16 @@ function reviewshake_get_state() {
 	// Get general settings.
 	$settings = get_option( 'reviewshake_widgets_settings', array() );
 
+	// Current tab.
+	$current_tab = isset( $_GET ) && isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'setup';
+
 	foreach ( $keys as $key ) {
 		$value         = reviewshake_check_settings( $settings, 'state', $key );
 		$state[ $key ] = $value ? reviewshake_sanitize( $key, $value ) : false;
+
+		if ( 'tab' === $key ) {
+			$state[ $key ] = $current_tab;
+		}
 
 		if ( 'started_at' === $key && $value ) {
 			$sec_to_sleep = 0;

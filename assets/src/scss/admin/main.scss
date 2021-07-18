@@ -211,6 +211,24 @@
 		.reviewshake-widgets-widgets {
 			margin-top: 60px;
 
+			.add-widget-to-site {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: flex-end;
+
+				.appearance-widgets-link {
+					border: 1px #e2e2e2 solid;
+					box-shadow: 0 0 1px 1px #f1f1f1;
+					padding: 10px;
+					text-decoration: none;
+				}
+
+				.appearance-widgets-link:hover {
+					background: #f0f0f1 !important;
+					text-decoration: none;
+				}
+			}
+
 			.reviewshake-widgets-widgets-container {
 				padding: 0 15px;
 				display: flex;
@@ -290,11 +308,11 @@
 				width: 10%;
 
 				.add-review-source {
-					padding: 0 25px;
+					padding: 0 20px;
 				}
 
 				.delete-review-source {
-					padding: 0 15px 0 19px;
+					padding: 0 12px;
 					background-color: #da4e50;
 					border-color: #da4e50;
 				}
