@@ -137,6 +137,7 @@ gulp.task( 'makePluginFile', () => {
 		'!vendor/',
 		'!vendor/**',
 		'!.git/**',
+		'!assets/src/',
 		'!assets/src/**',
 		'!.gitignore',
 		'!gulpfile.js',

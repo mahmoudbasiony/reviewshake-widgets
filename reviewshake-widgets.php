@@ -6,7 +6,7 @@
  * Version: 1.0.0
  * Author: Reviewshake
  * Author URI: https://www.reviewshake.com
- * Requires at least: 4.4.0
+ * Requires at least: 4.7.0
  * Tested up to: 5.7.2
  *
  * Text Domain: reviewshake-widgets
