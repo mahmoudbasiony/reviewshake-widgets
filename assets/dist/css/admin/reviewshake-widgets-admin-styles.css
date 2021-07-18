@@ -188,7 +188,7 @@
             background-color: #c52124 !important;
             border-color: #c52124 !important; }
       #reviewshake-widgets .reviewshake-widgets-setup .reviewshake-widgets-widgets .reviewshake-widgets-widget .widget-preview {
-        height: 760px;
+        max-height: 760px;
         overflow: scroll;
         margin-top: 5px;
         padding: 15px 0; }
