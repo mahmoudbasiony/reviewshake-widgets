@@ -7,7 +7,7 @@
  * Author: Reviewshake
  * Author URI: https://www.reviewshake.com
  * Requires at least: 4.7.0
- * Tested up to: 5.7.2
+ * Tested up to: 5.8
  *
  * Text Domain: reviewshake-widgets
  * Domain Path: /languages/

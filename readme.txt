@@ -1,7 +1,7 @@
 === Reviewshake Widgets ===
 Tags: widgets, reviews, google, facebook, yelp, tripadvisor, booking, expedia, amazon, capterra, indeed, trustpilot
 Requires at least: 4.7.0
-Tested up to: 5.7.2
+Tested up to: 5.8
 Requires PHP: 5.6.0
 Stable tag: 1.0.0
 License: GNU General Public License v3.0
