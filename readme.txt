@@ -1,5 +1,5 @@
 === Reviewshake Widgets ===
-Tags: widgets, reviews, google, facebook, yelp, tripadvisor, booking, expedia, amazon, capterra, indeed, trustpilot
+Tags: widgets, reviews, google, facebook, yelp, tripadvisor, booking, expedia, amazon, capterra, indeed, g2
 Requires at least: 4.7.0
 Tested up to: 5.8
 Requires PHP: 5.6.0
@@ -87,7 +87,6 @@ Thumbtack
 TripAdvisor
 Trulia
 TrustedShops
-Trustpilot
 TrustRadius
 Vitals
 Walmart
@@ -195,7 +194,6 @@ Thumbtack
 TripAdvisor
 Trulia
 TrustedShops
-Trustpilot
 TrustRadius
 Vitals
 Walmart

@@ -9,10 +9,6 @@
 $review_sources = apply_filters(
 	'reviewshake_widgets_review_sources',
 	array(
-		'trustpilot'       => array(
-			'source_name' => 'Trustpilot',
-			'source_url'  => 'https://www.trustpilot.com/review/slack.com',
-		),
 
 		'tripadvisor'      => array(
 			'source_name' => 'TripAdvisor',
