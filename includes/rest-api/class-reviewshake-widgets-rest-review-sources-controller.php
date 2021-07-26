@@ -245,7 +245,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 				// Validate errors.
 				if ( isset( $review_source->errors ) && is_array( $review_source->errors ) ) {
-					$status  = isset( $review_source->errors[0]->status ) ? $review_source->errors[0]->status : 500;
+					$status  = isset( $review_source->errors[0]->status ) ? $review_source->errors[0]->status : 404;
 					$message = isset( $review_source->errors[0]->detail ) ? $review_source->errors[0]->detail : esc_html__( 'Something went wrong!', 'reviewshake-widgets' );
 
 					return new WP_Error(
@@ -344,7 +344,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 				// Add another error validations as continue changing API.
 				if ( isset( $result->errors ) && is_array( $result->errors ) ) {
-					$status  = isset( $result->errors[0]->status ) ? (int) $result->errors[0]->status : 500;
+					$status  = isset( $result->errors[0]->status ) ? (int) $result->errors[0]->status : 404;
 					$message = isset( $result->errors[0]->detail ) ? esc_html( $result->errors[0]->detail ) : esc_html__( 'Something went wrong!', 'reviewshake-widgets' );
 
 					return new WP_Error(

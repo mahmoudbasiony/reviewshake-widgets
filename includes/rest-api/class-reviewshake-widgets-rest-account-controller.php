@@ -180,7 +180,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 				// Validate errors.
 				if ( isset( $account->errors ) && is_array( $account->errors ) ) {
-					$status  = isset( $account->errors[0]->status ) ? $account->errors[0]->status : 500;
+					$status  = isset( $account->errors[0]->status ) ? $account->errors[0]->status : 401;
 					$message = isset( $account->errors[0]->detail ) ? $account->errors[0]->detail : esc_html__( 'Something went wrong!', 'reviewshake-widgets' );
 
 					return new WP_Error(
@@ -298,7 +298,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 						);
 					}
 
-					$status  = isset( $account->errors[0]->status ) ? $account->errors[0]->status : 500;
+					$status  = isset( $account->errors[0]->status ) ? $account->errors[0]->status : 404;
 					$message = isset( $account->errors[0]->detail ) ? $account->errors[0]->detail : esc_html__( 'Something went wrong!', 'reviewshake-widgets' );
 
 					return new WP_Error(

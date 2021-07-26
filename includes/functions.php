@@ -60,18 +60,13 @@ function reviewshake_get_subdomain_from_url( $url = null ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_create_new_account( $subdomain ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . base64_decode( REVIEWSHAKE_WIDGETS_GENERAL_API ),
-		'Content-Type: application/json',
+		'Authorization' => base64_decode( REVIEWSHAKE_WIDGETS_GENERAL_API ),
+		'Content-Type'  => 'application/json',
 	);
 
 	// The POST data.
@@ -81,34 +76,29 @@ function reviewshake_create_new_account( $subdomain ) {
 		),
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_post(
+		'https://app.reviewshake.com/api/v2/platform/free_account',
 		array(
-			CURLOPT_URL            => 'https://app.reviewshake.com/api/v2/platform/free_account',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'POST',
-			CURLOPT_POSTFIELDS     => json_encode( $fields ),
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'POST',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'body'        => json_encode( $fields ),
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -119,18 +109,13 @@ function reviewshake_create_new_account( $subdomain ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_get_account_status( $email, $password = 'cnMxMjM0NTY=' ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . base64_decode( REVIEWSHAKE_WIDGETS_GENERAL_API ),
-		'Content-Type: application/json',
+		'Authorization' => base64_decode( REVIEWSHAKE_WIDGETS_GENERAL_API ),
+		'Content-Type'  => 'application/json',
 	);
 
 	// The Get data parameters.
@@ -143,33 +128,28 @@ function reviewshake_get_account_status( $email, $password = 'cnMxMjM0NTY=' ) {
 		)
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_get(
+		'https://app.reviewshake.com/api/v2/platform/account_status?' . $parameters,
 		array(
-			CURLOPT_URL            => 'https://app.reviewshake.com/api/v2/platform/account_status?' . $parameters,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'GET',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'GET',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $rs_code ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -180,44 +160,34 @@ function reviewshake_get_account_status( $email, $password = 'cnMxMjM0NTY=' ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_get_account_info( $api_key, $account_domain ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . $api_key,
-		'Content-Type: application/json',
+		'Authorization' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_get(
+		"https://{$account_domain}/api/v2/organization",
 		array(
-			CURLOPT_URL            => esc_url( "https://{$account_domain}/api/v2/organization" ),
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'GET',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'GET',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( ! isset( $response ) || 200 !== $rs_code ) {
-		$response = (object) array(
+	if ( ! isset( $response_body ) || 200 !== $rs_code ) {
+		$response_body = (object) array(
 			'errors' => array(
 				(object) array(
 					'status' => $rs_code,
@@ -227,13 +197,13 @@ function reviewshake_get_account_info( $api_key, $account_domain ) {
 		);
 	}
 
-	if ( is_object( $response ) ) {
-		$response->rscode         = $rs_code;
-		$response->api_key        = $api_key;
-		$response->account_domain = $account_domain;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode         = $rs_code;
+		$response_body->api_key        = $api_key;
+		$response_body->account_domain = $account_domain;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -244,48 +214,38 @@ function reviewshake_get_account_info( $api_key, $account_domain ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_turn_account_to_free_plan( $api_key, $account_domain ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . $api_key,
-		'Content-Type: application/json',
+		'Authorization' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_request(
+		"https://{$account_domain}/api/v2/organization/free_plan",
 		array(
-			CURLOPT_URL            => 'https://' . $account_domain . '/api/v2/organization/free_plan',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_PUT            => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'PUT',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'PUT',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'body'        => json_encode( array() ),
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -296,48 +256,37 @@ function reviewshake_turn_account_to_free_plan( $api_key, $account_domain ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_get_list_of_review_sources( $account_domain, $api_key ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . $api_key,
-		'Content-Type: application/json',
+		'Authorization' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	// cURL set opt.
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_get(
+		"https://{$account_domain}/api/v2/review_sources",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v2/review_sources",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'GET',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'GET',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -347,18 +296,13 @@ function reviewshake_get_list_of_review_sources( $account_domain, $api_key ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_add_review_source( $data ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . $data['apikey'],
-		'Content-Type: application/json',
+		'Authorization' => $data['apikey'],
+		'Content-Type'  => 'application/json',
 	);
 
 	// The POST data.
@@ -369,34 +313,29 @@ function reviewshake_add_review_source( $data ) {
 		),
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_post(
+		'https://' . $data['subdomain'] . '/api/v2/review_sources',
 		array(
-			CURLOPT_URL            => 'https://' . $data['subdomain'] . '/api/v2/review_sources',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'POST',
-			CURLOPT_POSTFIELDS     => json_encode( $fields ),
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'POST',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'body'        => json_encode( $fields ),
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -408,47 +347,37 @@ function reviewshake_add_review_source( $data ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_delete_review_source( $account_domain, $api_key, $source_id ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'Authorization: ' . $api_key,
-		'Content-Type: application/json',
+		'Authorization' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_request(
+		"https://{$account_domain}/api/v2/review_sources/{$source_id}",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v2/review_sources/{$source_id}",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'DELETE',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'DELETE',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -459,48 +388,37 @@ function reviewshake_delete_review_source( $account_domain, $api_key, $source_id
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_get_list_of_widgets( $account_domain, $api_key ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token: ' . $api_key,
-		'Content-Type: application/json',
+		'X-Spree-Token' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	// cURL set opt.
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_get(
+		"https://{$account_domain}/api/v1/widgets",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v1/widgets",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'GET',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'GET',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -512,47 +430,37 @@ function reviewshake_get_list_of_widgets( $account_domain, $api_key ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_get_widget( $id, $account_domain, $api_key ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token: ' . $api_key,
-		'Content-Type: application/json',
+		'X-Spree-Token' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_get(
+		"https://{$account_domain}/api/v1/widgets/{$id}",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v1/widgets/{$id}",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'GET',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'GET',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 
@@ -565,48 +473,38 @@ function reviewshake_get_widget( $id, $account_domain, $api_key ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_create_widget( $data, $account_domain, $api_key ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token: ' . $api_key,
-		'Content-Type: application/json',
+		'X-Spree-Token' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_post(
+		"https://{$account_domain}/api/v1/widgets",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v1/widgets",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'POST',
-			CURLOPT_POSTFIELDS     => json_encode( $data ),
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'POST',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'body'        => json_encode( $data ),
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -618,7 +516,7 @@ function reviewshake_create_widget( $data, $account_domain, $api_key ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_update_widget( $data, $account_domain, $api_key ) {
 	// Validate widget ID.
@@ -633,45 +531,35 @@ function reviewshake_update_widget( $data, $account_domain, $api_key ) {
 		);
 	}
 
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token: ' . $api_key,
-		'Content-Type: application/json',
+		'X-Spree-Token' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_request(
+		"https://{$account_domain}/api/v1/widgets/{$data['id']}",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v1/widgets/{$data['id']}",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'PUT',
-			CURLOPT_POSTFIELDS     => json_encode( $data ),
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'PUT',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'body'        => json_encode( $data ),
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**
@@ -683,47 +571,37 @@ function reviewshake_update_widget( $data, $account_domain, $api_key ) {
  *
  * @since 1.0.0
  *
- * @return object $response
+ * @return object $response_body
  */
 function reviewshake_delete_widget( $id, $account_domain, $api_key ) {
-	/*
-	 * cURL request.
-	 */
-	$ch = curl_init();
-
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token: ' . $api_key,
-		'Content-Type: application/json',
+		'X-Spree-Token' => $api_key,
+		'Content-Type'  => 'application/json',
 	);
 
-	curl_setopt_array(
-		$ch,
+	$response = wp_remote_request(
+		"https://{$account_domain}/api/v1/widgets/{$id}",
 		array(
-			CURLOPT_URL            => "https://{$account_domain}/api/v1/widgets/{$id}",
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING       => '',
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => 'DELETE',
-			CURLOPT_HTTPHEADER     => $headers,
+			'method'      => 'DELETE',
+			'timeout'     => 0,
+			'redirection' => 10,
+			'httpversion' => '1.0',
+			'blocking'    => true,
+			'headers'     => $headers,
+			'cookies'     => array(),
 		)
 	);
 
-	$response = curl_exec( $ch );
-	$rs_code  = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+	$rs_code = wp_remote_retrieve_response_code( $response );
 
-	curl_close( $ch );
+	$response_body = json_decode( wp_remote_retrieve_body( $response ) );
 
-	$response = json_decode( $response );
-
-	if ( is_object( $response ) ) {
-		$response->rscode = $rs_code;
+	if ( is_object( $response_body ) ) {
+		$response_body->rscode = $rs_code;
 	}
 
-	return $response;
+	return $response_body;
 }
 
 /**

@@ -664,16 +664,16 @@
 			// Get the create account response json.
 			const createAccountJson = await createAccountResponse.json();
 
-			let attributes = createAccountJson.data.attributes;
-			let accountDomain = createAccountJson.data.links.account_domain;
-			let email = attributes.email;
-
 			console.log('beforeSleep');
 
 			// Wait for x seconds to get account created.
 			await new Promise(resolve => isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve());
 
 			console.log('afterSleep');
+
+			let attributes = createAccountJson.data.attributes;
+			let accountDomain = createAccountJson.data.links.account_domain;
+			let email = attributes.email;
 
 			// Set interval every 5 seconds to check account fully created.
 			const tryGetAccount = setInterval(async () => {
@@ -699,7 +699,7 @@
 					let id = getAccountJson.data.id;
 					let type = getAccountJson.data.type;
 					let apiKey    = attributes.api_key;
-					let accountDomain = attributes.account_domain;
+					accountDomain = attributes.account_domain;
 
 					console.log('Get account created success');
 					console.log('before trial api');
@@ -803,7 +803,7 @@
 		// Get the add review source response json.
 		const reviewSourceJson = await addReviewSource.json();
 
-		if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode) {
+		if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode && reviewSourceJson.hasOwnProperty('html')) {
 			console.log('Review source added successfully!');
 			let html = reviewSourceJson.html;
 

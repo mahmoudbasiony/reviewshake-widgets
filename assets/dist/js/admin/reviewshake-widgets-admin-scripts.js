@@ -872,26 +872,28 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 10:
 							createAccountJson = _context9.sent;
-							attributes = createAccountJson.data.attributes;
-							accountDomain = createAccountJson.data.links.account_domain;
-							email = attributes.email;
 
 
 							console.log('beforeSleep');
 
 							// Wait for x seconds to get account created.
-							_context9.next = 17;
+							_context9.next = 14;
 							return new Promise(function (resolve) {
 								return isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve();
 							});
 
-						case 17:
+						case 14:
 
 							console.log('afterSleep');
 
+							attributes = createAccountJson.data.attributes;
+							accountDomain = createAccountJson.data.links.account_domain;
+							email = attributes.email;
+
 							// Set interval every 5 seconds to check account fully created.
+
 							tryGetAccount = setInterval(_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {
-								var getAccountResponse, getAccountJson, _attributes, id, type, apiKey, _accountDomain, convertToFree, listWidgetsJson, count, _body, addReviewSources;
+								var getAccountResponse, getAccountJson, _attributes, id, type, apiKey, convertToFree, listWidgetsJson, count, _body, addReviewSources;
 
 								return regeneratorRuntime.wrap(function _callee8$(_context8) {
 									while (1) {
@@ -928,8 +930,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												id = getAccountJson.data.id;
 												type = getAccountJson.data.type;
 												apiKey = _attributes.api_key;
-												_accountDomain = _attributes.account_domain;
 
+												accountDomain = _attributes.account_domain;
 
 												console.log('Get account created success');
 												console.log('before trial api');
@@ -942,7 +944,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												}
 
 												_context8.next = 18;
-												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/' + apiKey + '/' + _accountDomain, {
+												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/' + apiKey + '/' + accountDomain, {
 													method: 'PUT',
 													headers: {
 														'Content-Type': 'application/json',
@@ -978,7 +980,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 												_body = {
 													'apikey': apiKey,
-													'subdomain': _accountDomain,
+													'subdomain': accountDomain,
 													'source': source,
 													'sourceUrl': sourceUrl
 												};
@@ -1005,7 +1007,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 											case 34:
 
-												console.log('Account Domain ' + _accountDomain);
+												console.log('Account Domain ' + accountDomain);
 
 											case 35:
 											case 'end':
@@ -1101,7 +1103,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							reviewSourceJson = _context10.sent;
 
 
-							if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode) {
+							if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode && reviewSourceJson.hasOwnProperty('html')) {
 								console.log('Review source added successfully!');
 								html = reviewSourceJson.html;
 								successTitle = reviewshake_widgets_params.translations.add_source_success.title;
