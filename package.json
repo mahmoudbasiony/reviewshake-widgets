@@ -40,6 +40,7 @@
 		"jshint": "^2.9.5"
 	},
 	"dependencies": {
-		"postscribe": "^2.0.8"
+		"postscribe": "^2.0.8",
+		"select2": "^4.1.0-rc.0"
 	}
 }

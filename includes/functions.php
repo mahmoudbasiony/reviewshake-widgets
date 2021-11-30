@@ -313,6 +313,11 @@ function reviewshake_add_review_source( $data ) {
 		),
 	);
 
+	// Add google place ID if google is the source.
+	if ( 'google' === $data['source'] ) {
+		$fields['review_source']['source_id'] = $data['google_place_id'];
+	}
+
 	$response = wp_remote_post(
 		'https://' . $data['subdomain'] . '/api/v2/review_sources',
 		array(
@@ -740,6 +745,7 @@ function reviewshake_sanitize( $key, $value ) {
 
 		case 'account_domain':
 		case 'source_url_text':
+		case 'google_place_id':
 			return sanitize_text_field( $value );
 
 		case 'source_url':
@@ -858,6 +864,7 @@ function reviewshake_get_state() {
 		'started_at',
 		'source_name',
 		'source_url',
+		'google_place_id',
 	);
 
 	// Get general settings.

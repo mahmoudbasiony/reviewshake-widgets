@@ -158,10 +158,11 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 			// Initialize state.
 			$state = array(
-				'source_url'     => 'google' !== $source_name ? reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ) : reviewshake_sanitize( 'source_url_text', $request->get_param( 'sourceUrl' ) ),
-				'source_name'    => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
-				'account_status' => 'pending',
-				'source_status'  => 'pending',
+				'source_url'      => 'google' !== $source_name ? reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ) : reviewshake_sanitize( 'source_url_text', $request->get_param( 'sourceUrl' ) ),
+				'source_name'     => reviewshake_sanitize( 'source', $request->get_param( 'source' ) ),
+				'google_place_id' => reviewshake_sanitize( 'google_place_id', $request->get_param( 'googlePlaceId' ) ),
+				'account_status'  => 'pending',
+				'source_status'   => 'pending',
 			);
 
 			// Set state.

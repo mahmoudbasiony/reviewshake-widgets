@@ -30,7 +30,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 		public function __construct() {
 			add_action( 'wp_ajax_reviewshake_renders_widget_form', array( $this, 'renders_widget_form' ) );
 			add_action( 'wp_ajax_reviewshake_renders_review_source_form', array( $this, 'renders_review_source_form' ) );
-
+			add_action( 'wp_ajax_reviewshake_google_places_predictions', array( $this, 'google_places_predictions' ) );
 		}
 
 		/**
@@ -103,6 +103,66 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 
 			}
 
+			die();
+		}
+
+		/**
+		 * Gets google places predictions from google maps places API.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @return void
+		 */
+		public function google_places_predictions() {
+			// Check for nonce security.
+			if ( ! wp_verify_nonce( $_GET['nonce'], 'reviewshake-nonce' ) ) {
+				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'reviewshake-widgets' ) );
+			}
+
+			if ( isset( $_GET ) && isset( $_GET['action'] ) && 'reviewshake_google_places_predictions' === $_GET['action'] ) {
+				$input   = isset( $_GET['q'] ) ? sanitize_text_field( $_GET['q'] ) : '';
+				$api_key = base64_decode( REVIEWSHAKE_WIDGETS_GOOGLE_PLACES_API_KEY );
+
+				// The Get data parameters.
+				$parameters = http_build_query(
+					array(
+						'input' => $input,
+						'key'   => $api_key,
+						'types' => 'establishment',
+					)
+				);
+
+				$response = wp_remote_get(
+					'https://maps.googleapis.com/maps/api/place/autocomplete/json?' . $parameters,
+					array(
+						'method'      => 'GET',
+						'timeout'     => 0,
+						'redirection' => 10,
+						'httpversion' => '1.0',
+						'blocking'    => true,
+						'cookies'     => array(),
+					)
+				);
+
+				$response_body = json_decode( wp_remote_retrieve_body( $response ) );
+
+				// Initialize predictions array.
+				$predictions = array();
+
+				if ( isset( $response_body->status ) && 'OK' === $response_body->status ) {
+					foreach ( $response_body->predictions as $prediction ) {
+						if ( is_object( $prediction ) ) {
+							$prediction->id   = $prediction->place_id;
+							$prediction->text = $prediction->description;
+
+							// Push prediction object into predections array.
+							$predictions[] = $prediction;
+						}
+					}
+				}
+
+				wp_send_json_success( $predictions );
+			}
 			die();
 		}
 	}

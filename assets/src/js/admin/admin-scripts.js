@@ -13,6 +13,7 @@
 		let tab = appState.tab;
 		let sourceName = appState.source_name;
 		let sourceUrl = appState.source_url;
+		let googlePlaceId = appState.google_place_id;
 
 		console.log(appState);
 		if (tab && 'setup' === tab && sourceName && sourceUrl && appState.account_status && appState.source_status && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
@@ -28,7 +29,7 @@
 			/**
 			 * Continue creating the account.
 			 */
-			createAccount(sourceName, sourceUrl, form, isAccountExists, secToSleep);
+			createAccount(sourceName, sourceUrl, googlePlaceId, form, isAccountExists, secToSleep);
 		}
 	});
 
@@ -38,7 +39,23 @@
 	$(document).on('change','.review-sources',function(e){
 		let placeholder = $(this).find('option:selected').data('placeholder-url');
 
-		$(this).closest('.review-sources-row').find('.review-sources-url').attr('placeholder',placeholder);
+		let sourceName = $(this).find('option:selected').val();
+
+		if ('google' === sourceName) {
+			$(this).closest('.review-sources-row').find('.review-sources-url-column').hide();
+			$(this).closest('.review-sources-row').find('.review-sources-url-column.google-places-select').show();
+		} else {
+			$(this).closest('.review-sources-row').find('.review-sources-url-column').show();
+			$(this).closest('.review-sources-row').find('.review-sources-url-column.google-places-select').hide();
+			$(this).closest('.review-sources-row').find('input[type="text"].review-sources-url').attr('placeholder',placeholder);
+		}
+	});
+
+	/*
+	 * Get google places from google maps places API.
+	 */
+	$(document).ready(function(){
+		googlePlaceSelect();
 	});
 
 	/*
@@ -53,6 +70,15 @@
 		let source = form.find('select[name="source_name"] option:selected').val().toLowerCase();
 		let isAccountExists = form.data('account-exists');
 		let sourceID = parseInt( form.attr('data-review-source-id') );
+		let googlePlaceId = '';
+
+		if ('google' === source) {
+			sourceUrl = form.find('select[name="source_url"] option:selected').text();
+			googlePlaceId = form.find('select[name="source_url"] option:selected').val();
+		}
+
+		console.log(sourceUrl);
+		console.log(googlePlaceId);
 
 		// Define errors
 		let errors = false;
@@ -66,8 +92,9 @@
 		}
 
 		// Source URL is required.
-		if(sourceUrl.length <= 0){
-			form.find('.review-sources-url').after('<span class="error">'+reviewshake_widgets_params.translations.required+'</span');
+		if(sourceUrl.length <= 0 || ('google' === source && ( googlePlaceId == undefined || googlePlaceId.length <= 0)) ){
+			form.find('.error').remove();
+			form.find('.review-sources-url-column').append('<span class="error">'+reviewshake_widgets_params.translations.required+'</span');
 			errors = true;
 		}
 
@@ -87,7 +114,7 @@
 		 * @param {object}
 		 * @param {bool}
 		 */
-		createAccount(source, sourceUrl, form, isAccountExists);
+		createAccount(source, sourceUrl, googlePlaceId, form, isAccountExists);
 	});
 
 	/*
@@ -370,6 +397,76 @@
 	};
 
 	/**
+	 * Google places autocomplete predictions.
+	 *
+	 * @return void
+	 */
+	const googlePlaceSelect = () => {
+		$(".review-sources-row .google-places-select select").select2({
+			ajax: {
+				url: reviewshake_widgets_params.ajax_url,
+				dataType: 'json',
+				delay: 100,
+				data: function (params) {
+					return {
+						q: params.term,
+						action: 'reviewshake_google_places_predictions',
+						nonce : reviewshake_widgets_params.nonce,
+						input: params.term,
+					};
+				},
+				processResults: function (data, params) {
+					return {
+						results: data.data,
+					};
+				},
+				cache: true
+			},
+			placeholder: reviewshake_widgets_params.translations.google_places_placeholder,
+			allowClear: true,
+			minimumInputLength: 1,
+			templateResult: formatPlace,
+			templateSelection: formatPlaceSelection
+		});
+	}
+
+	/**
+	 * Formats google place results.
+	 *
+	 * @param {Object} place The google place object.
+	 *
+	 * @return {String} The formatted result
+	 */
+	const formatPlace = place => {
+		if (place.loading) {
+			return place.text;
+		}
+
+		var $container = $(
+			"<div class='select2-result-places clearfix'>" +
+			"<div class='select2-result-places__meta'>" +
+				"<div class='select2-result-places__title'></div>" +
+			"</div>" +
+			"</div>"
+		);
+		
+		$container.find(".select2-result-places__title").text(place.text);
+
+		return $container;
+	}
+
+	/**
+	 * Formats google place selection.
+	 *
+	 * @param {Object} place The google place object.
+	 *
+	 * @return {String} The formatted text
+	 */
+	const formatPlaceSelection = place => {
+		return place.text || place.description;
+	}
+
+	/**
 	 * Get account info
 	 *
 	 * @param {string} subdomain The account subdomain.
@@ -564,6 +661,9 @@
 
 		$( '.color_field' ).wpColorPicker();
 
+		// Google place select2
+		googlePlaceSelect();
+
 		if (!deleteWidgetResponse.ok && responseJson.hasOwnProperty('message') && responseJson.hasOwnProperty('data')) {
 			let message = responseJson.message;
 			let detail  = responseJson.data.detail;
@@ -618,6 +718,9 @@
 		// WP color picker
 		$( '.color_field' ).wpColorPicker();
 
+		// Google place select2
+		googlePlaceSelect();
+
 		// Hide Loader.
 		hideLoader();
 	};
@@ -627,12 +730,13 @@
 	 *
 	 * @param {string} source The review source name
 	 * @param {string} sourceUrl The review source url
+	 * @param {string} googlePlaceId The google place ID
 	 * @param {element} form The form element
 	 * @param {boolean} isAccountExists Whether the account is already exist
 	 *
 	 * @return void
 	 */
-	const createAccount = async(source, sourceUrl, form, isAccountExists, secToSleep = 20) => {
+	const createAccount = async(source, sourceUrl, googlePlaceId, form, isAccountExists, secToSleep = 20) => {
 		let sourcesCount = parseInt( form.attr('data-sources-count') );
 		let pricingPlan  = form.attr('data-pricing-plan');
 
@@ -649,6 +753,7 @@
 			const body = {
 				'source' : source,
 				'sourceUrl' : sourceUrl,
+				'googlePlaceId' : googlePlaceId,
 			};
 
 			// Send the create new account request to rest API 
@@ -732,6 +837,7 @@
 							'subdomain' : accountDomain,
 							'source' : source,
 							'sourceUrl' : sourceUrl,
+							'googlePlaceId' : googlePlaceId,
 						};
 	
 						/**
@@ -744,7 +850,10 @@
 	
 						// Wp Color Picker.
 						$( '.color_field' ).wpColorPicker();
-	
+
+						// Google place select2
+						googlePlaceSelect();
+
 						// Hide Loader.
 						hideLoader();
 					}
@@ -764,6 +873,7 @@
 					'subdomain' : '',
 					'source' : source,
 					'sourceUrl' : sourceUrl,
+					'googlePlaceId' : googlePlaceId,
 				};
 
 				/**
@@ -776,6 +886,9 @@
 
 				// Wp Color Picker.
 				$( '.color_field' ).wpColorPicker();
+
+				// Google place select2
+				googlePlaceSelect();
 
 				// Hide Loader.
 				hideLoader();
@@ -803,6 +916,7 @@
 		// Get the add review source response json.
 		const reviewSourceJson = await addReviewSource.json();
 
+		console.log(reviewSourceJson);
 		if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode && reviewSourceJson.hasOwnProperty('html')) {
 			console.log('Review source added successfully!');
 			let html = reviewSourceJson.html;

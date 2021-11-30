@@ -17,6 +17,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		var tab = appState.tab;
 		var sourceName = appState.source_name;
 		var sourceUrl = appState.source_url;
+		var googlePlaceId = appState.google_place_id;
 
 		console.log(appState);
 		if (tab && 'setup' === tab && sourceName && sourceUrl && appState.account_status && appState.source_status && ('pending' === appState.account_status || 'on_hold' === appState.account_status || 'pending' === appState.source_status)) {
@@ -32,7 +33,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			/**
     * Continue creating the account.
     */
-			createAccount(sourceName, sourceUrl, form, isAccountExists, secToSleep);
+			createAccount(sourceName, sourceUrl, googlePlaceId, form, isAccountExists, secToSleep);
 		}
 	});
 
@@ -42,7 +43,23 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 	$(document).on('change', '.review-sources', function (e) {
 		var placeholder = $(this).find('option:selected').data('placeholder-url');
 
-		$(this).closest('.review-sources-row').find('.review-sources-url').attr('placeholder', placeholder);
+		var sourceName = $(this).find('option:selected').val();
+
+		if ('google' === sourceName) {
+			$(this).closest('.review-sources-row').find('.review-sources-url-column').hide();
+			$(this).closest('.review-sources-row').find('.review-sources-url-column.google-places-select').show();
+		} else {
+			$(this).closest('.review-sources-row').find('.review-sources-url-column').show();
+			$(this).closest('.review-sources-row').find('.review-sources-url-column.google-places-select').hide();
+			$(this).closest('.review-sources-row').find('input[type="text"].review-sources-url').attr('placeholder', placeholder);
+		}
+	});
+
+	/*
+  * Get google places from google maps places API.
+  */
+	$(document).ready(function () {
+		googlePlaceSelect();
 	});
 
 	/*
@@ -57,6 +74,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		var source = form.find('select[name="source_name"] option:selected').val().toLowerCase();
 		var isAccountExists = form.data('account-exists');
 		var sourceID = parseInt(form.attr('data-review-source-id'));
+		var googlePlaceId = '';
+
+		if ('google' === source) {
+			sourceUrl = form.find('select[name="source_url"] option:selected').text();
+			googlePlaceId = form.find('select[name="source_url"] option:selected').val();
+		}
+
+		console.log(sourceUrl);
+		console.log(googlePlaceId);
 
 		// Define errors
 		var errors = false;
@@ -70,8 +96,9 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		}
 
 		// Source URL is required.
-		if (sourceUrl.length <= 0) {
-			form.find('.review-sources-url').after('<span class="error">' + reviewshake_widgets_params.translations.required + '</span');
+		if (sourceUrl.length <= 0 || 'google' === source && (googlePlaceId == undefined || googlePlaceId.length <= 0)) {
+			form.find('.error').remove();
+			form.find('.review-sources-url-column').append('<span class="error">' + reviewshake_widgets_params.translations.required + '</span');
 			errors = true;
 		}
 
@@ -91,7 +118,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
    * @param {object}
    * @param {bool}
    */
-		createAccount(source, sourceUrl, form, isAccountExists);
+		createAccount(source, sourceUrl, googlePlaceId, form, isAccountExists);
 	});
 
 	/*
@@ -396,6 +423,70 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			return _ref.apply(this, arguments);
 		};
 	}();
+
+	/**
+  * Google places autocomplete predictions.
+  *
+  * @return void
+  */
+	var googlePlaceSelect = function googlePlaceSelect() {
+		$(".review-sources-row .google-places-select select").select2({
+			ajax: {
+				url: reviewshake_widgets_params.ajax_url,
+				dataType: 'json',
+				delay: 100,
+				data: function data(params) {
+					return {
+						q: params.term,
+						action: 'reviewshake_google_places_predictions',
+						nonce: reviewshake_widgets_params.nonce,
+						input: params.term
+					};
+				},
+				processResults: function processResults(data, params) {
+					return {
+						results: data.data
+					};
+				},
+				cache: true
+			},
+			placeholder: reviewshake_widgets_params.translations.google_places_placeholder,
+			allowClear: true,
+			minimumInputLength: 1,
+			templateResult: formatPlace,
+			templateSelection: formatPlaceSelection
+		});
+	};
+
+	/**
+  * Formats google place results.
+  *
+  * @param {Object} place The google place object.
+  *
+  * @return {String} The formatted result
+  */
+	var formatPlace = function formatPlace(place) {
+		if (place.loading) {
+			return place.text;
+		}
+
+		var $container = $("<div class='select2-result-places clearfix'>" + "<div class='select2-result-places__meta'>" + "<div class='select2-result-places__title'></div>" + "</div>" + "</div>");
+
+		$container.find(".select2-result-places__title").text(place.text);
+
+		return $container;
+	};
+
+	/**
+  * Formats google place selection.
+  *
+  * @param {Object} place The google place object.
+  *
+  * @return {String} The formatted text
+  */
+	var formatPlaceSelection = function formatPlaceSelection(place) {
+		return place.text || place.description;
+	};
 
 	/**
   * Get account info
@@ -712,6 +803,9 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 							$('.color_field').wpColorPicker();
 
+							// Google place select2
+							googlePlaceSelect();
+
 							if (!deleteWidgetResponse.ok && responseJson.hasOwnProperty('message') && responseJson.hasOwnProperty('data')) {
 								message = responseJson.message;
 								detail = responseJson.data.detail;
@@ -723,7 +817,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							// Hide Loader.
 							hideLoader();
 
-						case 10:
+						case 11:
 						case 'end':
 							return _context6.stop();
 					}
@@ -793,10 +887,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							// WP color picker
 							$('.color_field').wpColorPicker();
 
+							// Google place select2
+							googlePlaceSelect();
+
 							// Hide Loader.
 							hideLoader();
 
-						case 9:
+						case 10:
 						case 'end':
 							return _context7.stop();
 					}
@@ -814,14 +911,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   *
   * @param {string} source The review source name
   * @param {string} sourceUrl The review source url
+  * @param {string} googlePlaceId The google place ID
   * @param {element} form The form element
   * @param {boolean} isAccountExists Whether the account is already exist
   *
   * @return void
   */
 	var createAccount = function () {
-		var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(source, sourceUrl, form, isAccountExists) {
-			var secToSleep = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
+		var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(source, sourceUrl, googlePlaceId, form, isAccountExists) {
+			var secToSleep = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 20;
 
 			var sourcesCount, pricingPlan, body, createAccountResponse, createAccountJson, attributes, accountDomain, email, tryGetAccount, listWidgetsJson, _body2, addReviewSources;
 
@@ -850,7 +948,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 							body = {
 								'source': source,
-								'sourceUrl': sourceUrl
+								'sourceUrl': sourceUrl,
+								'googlePlaceId': googlePlaceId
 							};
 
 							// Send the create new account request to rest API 
@@ -919,7 +1018,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												getAccountJson = _context8.sent;
 
 												if (!(getAccountJson.hasOwnProperty('data') && getAccountJson.data.hasOwnProperty('attributes'))) {
-													_context8.next = 35;
+													_context8.next = 36;
 													break;
 												}
 
@@ -968,7 +1067,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												listWidgetsJson = _context8.sent;
 
 												if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-													_context8.next = 34;
+													_context8.next = 35;
 													break;
 												}
 
@@ -982,7 +1081,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 													'apikey': apiKey,
 													'subdomain': accountDomain,
 													'source': source,
-													'sourceUrl': sourceUrl
+													'sourceUrl': sourceUrl,
+													'googlePlaceId': googlePlaceId
 												};
 
 												/**
@@ -1002,21 +1102,24 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												// Wp Color Picker.
 												$('.color_field').wpColorPicker();
 
+												// Google place select2
+												googlePlaceSelect();
+
 												// Hide Loader.
 												hideLoader();
 
-											case 34:
+											case 35:
 
 												console.log('Account Domain ' + accountDomain);
 
-											case 35:
+											case 36:
 											case 'end':
 												return _context8.stop();
 										}
 									}
 								}, _callee8, undefined);
 							})), 5000);
-							_context9.next = 31;
+							_context9.next = 32;
 							break;
 
 						case 21:
@@ -1027,7 +1130,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							listWidgetsJson = _context9.sent;
 
 							if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-								_context9.next = 31;
+								_context9.next = 32;
 								break;
 							}
 
@@ -1035,7 +1138,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 								'apikey': '',
 								'subdomain': '',
 								'source': source,
-								'sourceUrl': sourceUrl
+								'sourceUrl': sourceUrl,
+								'googlePlaceId': googlePlaceId
 							};
 
 							/**
@@ -1055,10 +1159,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							// Wp Color Picker.
 							$('.color_field').wpColorPicker();
 
+							// Google place select2
+							googlePlaceSelect();
+
 							// Hide Loader.
 							hideLoader();
 
-						case 31:
+						case 32:
 						case 'end':
 							return _context9.stop();
 					}
@@ -1066,7 +1173,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			}, _callee9, undefined);
 		}));
 
-		return function createAccount(_x14, _x15, _x16, _x17) {
+		return function createAccount(_x14, _x15, _x16, _x17, _x18) {
 			return _ref8.apply(this, arguments);
 		};
 	}();
@@ -1103,6 +1210,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							reviewSourceJson = _context10.sent;
 
 
+							console.log(reviewSourceJson);
 							if (reviewSourceJson.hasOwnProperty('rscode') && 200 == reviewSourceJson.rscode && reviewSourceJson.hasOwnProperty('html')) {
 								console.log('Review source added successfully!');
 								html = reviewSourceJson.html;
@@ -1140,7 +1248,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 								}
 							}
 
-						case 7:
+						case 8:
 						case 'end':
 							return _context10.stop();
 					}
@@ -1148,7 +1256,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			}, _callee10, undefined);
 		}));
 
-		return function addReviewSource(_x18, _x19) {
+		return function addReviewSource(_x19, _x20) {
 			return _ref10.apply(this, arguments);
 		};
 	}();

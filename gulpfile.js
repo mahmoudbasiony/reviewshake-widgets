@@ -143,6 +143,7 @@ gulp.task( 'makePluginFile', () => {
 		'!gulpfile.js',
 		'!package.json',
 		'!package-lock.json',
+		'!npm-shrinkwrap.json',
 		'!composer.json',
 		'!composer.lock',
 		'!phpcs.xml',

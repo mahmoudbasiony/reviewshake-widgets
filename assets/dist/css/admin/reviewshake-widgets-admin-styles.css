@@ -204,6 +204,8 @@
       width: 100%; }
     #reviewshake-widgets .reviewshake-widgets-setup .review-sources-table .review-sources-url-column .review-sources-url::placeholder {
       color: #d2cfcf; }
+    #reviewshake-widgets .reviewshake-widgets-setup .review-sources-table .review-sources-url-column .select2-container {
+      width: 100% !important; }
   #reviewshake-widgets .reviewshake-widgets-setup .review-sources-table .review-sources-add-column {
     width: 10%; }
     #reviewshake-widgets .reviewshake-widgets-setup .review-sources-table .review-sources-add-column .add-review-source {

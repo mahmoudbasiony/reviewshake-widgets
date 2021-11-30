@@ -235,9 +235,11 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				$review_source = reviewshake_add_review_source( $data );
 
 				$state = array(
-					'source_status' => 'completed',
-					'source_name'   => '',
-					'source_url'    => '',
+					'source_status'   => 'completed',
+					'source_name'     => '',
+					'source_url'      => '',
+					'google_place_id' => '',
+
 				);
 
 				// Set state.
@@ -377,7 +379,8 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param WP_REST_Request $request Request object.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 1.1.0
 		 *
 		 * @return WP_Error|array $prepared_item
 		 */
@@ -385,17 +388,19 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 			$prepared_item = array();
 
-			$account_domain = $request->get_param( 'subdomain' ) ? $request->get_param( 'subdomain' ) : $this->account_domain;
-			$api_key        = $request->get_param( 'apikey' ) ? $request->get_param( 'apikey' ) : $this->api_key;
-			$source_name    = reviewshake_sanitize( 'source', $request->get_param( 'source' ) );
-			$source_url     = 'google' !== $source_name ? reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ) : reviewshake_sanitize( 'source_url_text', $request->get_param( 'sourceUrl' ) );
+			$account_domain  = $request->get_param( 'subdomain' ) ? $request->get_param( 'subdomain' ) : $this->account_domain;
+			$api_key         = $request->get_param( 'apikey' ) ? $request->get_param( 'apikey' ) : $this->api_key;
+			$source_name     = reviewshake_sanitize( 'source', $request->get_param( 'source' ) );
+			$source_url      = 'google' !== $source_name ? reviewshake_sanitize( 'source_url', $request->get_param( 'sourceUrl' ) ) : reviewshake_sanitize( 'source_url_text', $request->get_param( 'sourceUrl' ) );
+			$google_place_id = reviewshake_sanitize( 'google_place_id', $request->get_param( 'googlePlaceId' ) );
 
 			// Set the sanitized data array.
 			$prepared_item = array(
-				'subdomain' => $account_domain,
-				'apikey'    => $api_key,
-				'source'    => $source_name,
-				'sourceurl' => $source_url,
+				'subdomain'       => $account_domain,
+				'apikey'          => $api_key,
+				'source'          => $source_name,
+				'sourceurl'       => $source_url,
+				'google_place_id' => $google_place_id,
 			);
 
 			if ( empty( $prepared_item['source'] ) ) {
@@ -426,6 +431,20 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				);
 			}
 
+			if ( 'google' === $prepared_item['source'] && empty( $prepared_item['google_place_id'] ) ) {
+				return new WP_Error(
+					'reviewshake_error_on_create_review_source',
+					esc_html__( 'Add Review Source', 'reviewshake-widgets' ),
+					array(
+						'status' => 422,
+						'detail' => esc_html__(
+							'Google Place ID is required and cannot be blank!',
+							'reviewshake-widgets'
+						),
+					)
+				);
+			}
+
 			return $prepared_item;
 		}
 
@@ -434,12 +453,14 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param object $review_sources The review sources.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 1.1.0
 		 *
 		 * @return WP_Error|array $prepared_item
 		 */
 		protected function prepare_sources_for_database( $review_sources ) {
 			$prepared_item = array();
+			$integration   = array();
 
 			if ( isset( $review_sources->data ) && ! empty( $review_sources->data ) ) {
 				$prefix = 'rs';
@@ -449,6 +470,26 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 						foreach ( $source as $key => $value ) {
 							if ( is_object( $value ) || is_array( $value ) ) {
 								foreach ( $value as $nest_key => $nest_value ) {
+									if ( 'integration' === $nest_key && is_object( $nest_value ) && isset( $nest_value->data ) && is_object( $nest_value->data ) && ! empty( $nest_value->data ) ) {
+										foreach ( $nest_value->data as $integration_key => $integration_value ) {
+											if ( is_object( $integration_value ) && ! empty( $integration_value ) ) {
+												foreach ( $integration_value as $integration_sub_key => $integration_sub_value ) {
+													if ( is_object( $integration_sub_value ) && ! empty( $integration_sub_value ) ) {
+														foreach ( $integration_sub_value as $sub_sub_key => $sub_sub_value ) {
+															if ( ! is_object( $sub_sub_value ) ) {
+																$integration[ $sub_sub_key ] = reviewshake_sanitize( $sub_sub_key, $sub_sub_value );
+															}
+														}
+													} else {
+														$integration[ $integration_sub_key ] = reviewshake_sanitize( $integration_sub_key, $integration_sub_value );
+													}
+												}
+											} else {
+												$integration[ $integration_key ] = reviewshake_sanitize( $integration_key, $integration_value );
+											}
+										}
+									}
+
 									$prepared_item[ $source_id ][ $nest_key ] = 'source_url' !== $nest_key ? reviewshake_sanitize( $nest_key, $nest_value ) : $nest_value;
 								}
 							} else {
@@ -456,7 +497,8 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 							}
 						}
 
-						$prepared_item[ $source_id ]['source_url'] = 'google' === $prepared_item[ $source_id ]['source_name'] ? reviewshake_sanitize( 'source_url_text', $prepared_item[ $source_id ]['source_url'] ) : reviewshake_sanitize( 'source_url', $prepared_item[ $source_id ]['source_url'] );
+						$prepared_item[ $source_id ]['source_url']  = 'google' === $prepared_item[ $source_id ]['source_name'] ? reviewshake_sanitize( 'source_url_text', $prepared_item[ $source_id ]['source_url'] ) : reviewshake_sanitize( 'source_url', $prepared_item[ $source_id ]['source_url'] );
+						$prepared_item[ $source_id ]['integration'] = $integration;
 					}
 				}
 			}
@@ -470,13 +512,14 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param object $review_source The review source object.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 1.1.0
 		 *
 		 * @return WP_Error|array $prepared_item
 		 */
 		protected function prepare_review_source_for_database( $review_source ) {
-
 			$prepared_item = array();
+			$integration   = array();
 
 			if ( isset( $review_source->data ) && is_object( $review_source->data ) && isset( $review_source->data->id ) ) {
 				$prefix    = 'rs';
@@ -485,6 +528,26 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				foreach ( $review_source->data as $key => $value ) {
 					if ( is_object( $value ) && ! empty( $value ) ) {
 						foreach ( $value as $nest_key => $nest_value ) {
+							if ( 'integration' === $nest_key && is_object( $nest_value ) && isset( $nest_value->data ) && is_object( $nest_value->data ) && ! empty( $nest_value->data ) ) {
+								foreach ( $nest_value->data as $integration_key => $integration_value ) {
+									if ( is_object( $integration_value ) && ! empty( $integration_value ) ) {
+										foreach ( $integration_value as $integration_sub_key => $integration_sub_value ) {
+											if ( is_object( $integration_sub_value ) && ! empty( $integration_sub_value ) ) {
+												foreach ( $integration_sub_value as $sub_sub_key => $sub_sub_value ) {
+													if ( ! is_object( $sub_sub_value ) ) {
+														$integration[ $sub_sub_key ] = reviewshake_sanitize( $sub_sub_key, $sub_sub_value );
+													}
+												}
+											} else {
+												$integration[ $integration_sub_key ] = reviewshake_sanitize( $integration_sub_key, $integration_sub_value );
+											}
+										}
+									} else {
+										$integration[ $integration_key ] = reviewshake_sanitize( $integration_key, $integration_value );
+									}
+								}
+							}
+
 							$prepared_item[ $source_id ][ $nest_key ] = 'source_url' !== $nest_key ? reviewshake_sanitize( $nest_key, $nest_value ) : $nest_value;
 						}
 					} else {
@@ -492,12 +555,12 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					}
 				}
 
-				$prepared_item[ $source_id ]['source_url'] = 'google' === $prepared_item[ $source_id ]['source_name'] ? reviewshake_sanitize( 'source_url_text', $prepared_item[ $source_id ]['source_url'] ) : reviewshake_sanitize( 'source_url', $prepared_item[ $source_id ]['source_url'] );
+				$prepared_item[ $source_id ]['source_url']  = 'google' === $prepared_item[ $source_id ]['source_name'] ? reviewshake_sanitize( 'source_url_text', $prepared_item[ $source_id ]['source_url'] ) : reviewshake_sanitize( 'source_url', $prepared_item[ $source_id ]['source_url'] );
+				$prepared_item[ $source_id ]['integration'] = $integration;
 			}
 
 			return $prepared_item;
 		}
-
 
 		/**
 		 * Prepare the item for the REST response
@@ -517,34 +580,41 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Get the query params for collections.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 1.1.0
 		 *
 		 * @return array
 		 */
 		public function get_collection_params() {
 			return array(
-				'subdomain' => array(
+				'subdomain'     => array(
 					'description'       => esc_html__( 'The Reviewshake account subdomain.', 'reviewshake-widgets' ),
 					'type'              => 'string',
 					'default'           => $this->account_domain,
 					'validate_callback' => 'rest_validate_request_arg',
 					'sanitize_callback' => 'rest_sanitize_request_arg',
 				),
-				'apikey'    => array(
+				'apikey'        => array(
 					'description'       => esc_html__( 'The Reviewshake account API key.', 'reviewshake-widgets' ),
 					'type'              => 'string',
 					'default'           => $this->api_key,
 					'validate_callback' => 'rest_validate_request_arg',
 					'sanitize_callback' => 'rest_sanitize_request_arg',
 				),
-				'source'    => array(
+				'source'        => array(
 					'description'       => esc_html__( 'The Reviewshake review source name.', 'reviewshake-widgets' ),
 					'type'              => 'string',
 					'validate_callback' => 'rest_validate_request_arg',
 					'sanitize_callback' => 'rest_sanitize_request_arg',
 				),
-				'sourceUrl' => array(
+				'sourceUrl'     => array(
 					'description'       => esc_html__( 'The Reviewshake review source URL.', 'reviewshake-widgets' ),
+					'type'              => 'string',
+					'validate_callback' => 'rest_validate_request_arg',
+					'sanitize_callback' => 'rest_sanitize_request_arg',
+				),
+				'googlePlaceId' => array(
+					'description'       => esc_html__( 'The Reviewshake google review source ID.', 'reviewshake-widgets' ),
 					'type'              => 'string',
 					'validate_callback' => 'rest_validate_request_arg',
 					'sanitize_callback' => 'rest_sanitize_request_arg',
@@ -555,7 +625,8 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Retrieves the review source's schema, conforming to JSON Schema.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 1.1.0
 		 *
 		 * @return array $schema
 		 */
@@ -565,12 +636,12 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				'title'      => 'reviewshake-review-sources',
 				'type'       => 'object',
 				'properties' => array(
-					'id'        => array(
+					'id'            => array(
 						'description' => esc_html__( 'Unique identifier for the review source.', 'reviewshake-widgets' ),
 						'type'        => 'integer',
 						'readonly'    => true,
 					),
-					'subdomain' => array(
+					'subdomain'     => array(
 						'description' => esc_html__( 'The Reviewshake account domain.', 'reviewshake-widgets' ),
 						'type'        => 'string',
 						'context'     => array( 'view' ),
@@ -579,7 +650,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 							'sanitize_callback' => 'sanitize_text_field',
 						),
 					),
-					'apikey'    => array(
+					'apikey'        => array(
 						'description' => esc_html__( 'The Reviewshake account API key.', 'reviewshake-widgets' ),
 						'type'        => 'string',
 						'required'    => true,
@@ -588,7 +659,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 							'sanitize_callback' => 'sanitize_text_field',
 						),
 					),
-					'source'    => array(
+					'source'        => array(
 						'description' => esc_html__( 'The Reviewshake review source name.', 'reviewshake-widgets' ),
 						'type'        => 'string',
 						'context'     => array( 'edit' ),
@@ -596,8 +667,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 							'sanitize_callback' => 'sanitize_text_field',
 						),
 					),
-					'sourceUrl' => array(
+					'sourceUrl'     => array(
 						'description' => esc_html__( 'The Reviewshake review source URL.', 'reviewshake-widgets' ),
+						'type'        => 'string',
+						'context'     => array( 'edit' ),
+						'arg_options' => array(
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+					),
+					'googlePlaceId' => array(
+						'description' => esc_html__( 'The Reviewshake google review source ID.', 'reviewshake-widgets' ),
 						'type'        => 'string',
 						'context'     => array( 'edit' ),
 						'arg_options' => array(

@@ -3,7 +3,7 @@
  * Plugin Name: Reviewshake Widgets
  * Plugin URI:
  * Description: Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Reviewshake
  * Author URI: https://www.reviewshake.com
  * Requires at least: 4.7.0
@@ -26,13 +26,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /*
  * Globals constants.
  */
-define( 'REVIEWSHAKE_WIDGETS_PLUGIN_VERSION', '1.0.0' );
+define( 'REVIEWSHAKE_WIDGETS_PLUGIN_VERSION', '1.1.0' );
 define( 'REVIEWSHAKE_WIDGETS_MIN_PHP_VER', '5.6.0' );
 define( 'REVIEWSHAKE_WIDGETS_MIN_WP_VER', '4.7.0' );
 define( 'REVIEWSHAKE_WIDGETS_ROOT_PATH', dirname( __FILE__ ) );
 define( 'REVIEWSHAKE_WIDGETS_ROOT_URL', plugin_dir_url( __FILE__ ) );
 define( 'REVIEWSHAKE_WIDGETS_TEMPLATES_PATH', dirname( __FILE__ ) . '/templates/' );
 define( 'REVIEWSHAKE_WIDGETS_GENERAL_API', 'NDRhNmJhNTJlNjcwMzg2NTM5OTg2M2U3YTFiOWE1MmNlMzJlZjAwZDg3Mzg4OTcx' );
+define( 'REVIEWSHAKE_WIDGETS_GOOGLE_PLACES_API_KEY', 'QUl6YVN5QmFDRVNzMzNHck9VYzFsRXkzanhOQ3BhOWxFNWd3TkpZ' );
 
 if ( ! class_exists( 'Reviewshake_Widgets' ) ) :
 
@@ -49,7 +50,7 @@ if ( ! class_exists( 'Reviewshake_Widgets' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.0.0';
+		public $version = '1.1.0';
 
 		/**
 		 * The singelton instance of Reviewshake_Widgets.

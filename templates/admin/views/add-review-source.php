@@ -49,6 +49,10 @@ ksort( $review_sources );
 						<input type="text" name="source_url" class="review-sources-url" id="review-sources-url" placeholder="" />
 					</th>
 
+					<th class="review-sources-url-column google-places-select" style="display:none;">
+						<select name="source_url" class="review-sources-url" id="review-sources-url"></select>
+					</th>
+
 					<th class="review-sources-add-column">
 						<input type="submit" name="add_review_source" id="add-review-source" class="button button-primary add-review-source" value="<?php esc_html_e( 'Add', 'reviewshake-widgets' ); ?>" />
 					</th>
