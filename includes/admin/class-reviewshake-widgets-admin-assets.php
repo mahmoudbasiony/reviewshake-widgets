@@ -99,6 +99,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Assets' ) ) :
 					'translations'   => array(
 						'required'                  => esc_html__( 'This field is required!', 'reviewshake-widgets' ),
 						'google_places_placeholder' => esc_html__( 'Business Name', 'reviewshake-widgets' ),
+						'no_places_found'           => esc_html__( 'No places found', 'reviewshake-widgets' ),
 						'add_source_success'        => array(
 							'title'   => esc_html__( 'Review Source', 'reviewshake-widgets' ),
 							'message' => esc_html__( 'Your review source has been added. We are currently fetching the reviews.', 'reviewshake-widgets' ),

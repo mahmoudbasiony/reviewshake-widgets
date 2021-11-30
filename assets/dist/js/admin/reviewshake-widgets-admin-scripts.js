@@ -451,6 +451,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 				cache: true
 			},
 			placeholder: reviewshake_widgets_params.translations.google_places_placeholder,
+			language: {
+				noResults: function noResults() {
+					return reviewshake_widgets_params.translations.no_places_found;
+				}
+			},
 			allowClear: true,
 			minimumInputLength: 1,
 			templateResult: formatPlace,
