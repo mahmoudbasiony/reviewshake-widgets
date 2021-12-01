@@ -81,9 +81,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			googlePlaceId = form.find('select[name="source_url"] option:selected').val();
 		}
 
-		console.log(sourceUrl);
-		console.log(googlePlaceId);
-
 		// Define errors
 		var errors = false;
 		// First remove all errors.

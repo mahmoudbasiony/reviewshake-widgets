@@ -77,9 +77,6 @@
 			googlePlaceId = form.find('select[name="source_url"] option:selected').val();
 		}
 
-		console.log(sourceUrl);
-		console.log(googlePlaceId);
-
 		// Define errors
 		let errors = false;
 		// First remove all errors.
