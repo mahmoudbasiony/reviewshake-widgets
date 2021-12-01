@@ -112,7 +112,7 @@ $widget    = reviewshake_check_settings( $settings, 'widgets', $prefix );
 						<td>
 							<div class="widget_min_star_rating" id="widget_min_star_rating">
 								<?php for ( $i = 1; $i <= $max_stars; $i ++ ) : ?>
-									<div class="star_rating <?php echo (( 1 === $i && ! isset( $widget['ex_star_rating'] ) ) ? 'selected' : ( count( $widget['ex_star_rating'] ) === ( $i - 1 ) )) ? 'selected' : ''; ?>" data-star-rate="<?php echo esc_attr( $i ); ?>"><?php echo esc_html( $i ); ?></div>
+									<div class="star_rating <?php echo ( ( 1 === $i && ! isset( $widget['ex_star_rating'] ) ) ? 'selected' : ( count( $widget['ex_star_rating'] ) === ( $i - 1 ) ) ) ? 'selected' : ''; ?>" data-star-rate="<?php echo esc_attr( $i ); ?>"><?php echo esc_html( $i ); ?></div>
 								<?php endfor; ?>
 
 								<input type="hidden" class="widget_ex_star_rating" name="ex_star_rating" value="[]"/>

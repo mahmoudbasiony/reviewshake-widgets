@@ -238,4 +238,4 @@ You can get in touch with us at support@reviewshake.com, or via the live chat fr
 * Feature: add autocomplete google places list to google review source.
 
 = 1.0.0 = 20 July 2021
-* Initial release
+* Initial release.
