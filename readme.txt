@@ -234,8 +234,8 @@ You can get in touch with us at support@reviewshake.com, or via the live chat fr
 
 == Changelog ==
 
-= 1.1.0 = 01 Dec 2021
-* Feature: add autocomplete google places list to google review source.
+= 1.1.0 = 8 Dec 2021
+* Google Reviews are now much easier to obtain: you just choose the Google Place from an autocomplete list - no API keys or place IDs required, and you get instant results.
 
 = 1.0.0 = 20 July 2021
 * Initial release.

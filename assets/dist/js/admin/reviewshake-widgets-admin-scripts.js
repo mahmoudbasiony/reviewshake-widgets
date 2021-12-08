@@ -472,11 +472,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			return place.text;
 		}
 
-		var $container = $("<div class='select2-result-places clearfix'>" + "<div class='select2-result-places__meta'>" + "<div class='select2-result-places__title'></div>" + "</div>" + "</div>");
+		var container = $("<div class='select2-result-places clearfix'>" + "<div class='select2-result-places__meta'>" + "<div class='select2-result-places__title'></div>" + "</div>" + "</div>");
 
-		$container.find(".select2-result-places__title").text(place.text);
+		container.find(".select2-result-places__title").text(place.text);
 
-		return $container;
+		if (place.id === 'reviewshake_powered_by_google') {
+			container.find(".select2-result-places__title").append('<img src="' + place.image_url + '" />');
+		}
+
+		return container;
 	};
 
 	/**

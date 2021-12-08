@@ -159,6 +159,17 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 							$predictions[] = $prediction;
 						}
 					}
+
+					// Adds powered by google logo.
+					if ( isset( $response_body->predictions ) && ! empty( $response_body->predictions ) && ! empty( $predictions ) ) {
+						$powered_by_google = new stdClass();
+						$powered_by_google->id        = 'reviewshake_powered_by_google';
+						$powered_by_google->text      = '';
+						$powered_by_google->disabled  = true;
+						$powered_by_google->image_url = esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/powered_by_google.png' );
+
+						$predictions[] = $powered_by_google;
+					}
 				}
 
 				wp_send_json_success( $predictions );
