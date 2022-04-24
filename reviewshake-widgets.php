@@ -3,11 +3,11 @@
  * Plugin Name: Reviewshake Widgets
  * Plugin URI:
  * Description: Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites.
- * Version: 1.1.0
+ * Version: 2.0.0
  * Author: Reviewshake
  * Author URI: https://www.reviewshake.com
  * Requires at least: 4.7.0
- * Tested up to: 5.8
+ * Tested up to: 5.9
  *
  * Text Domain: reviewshake-widgets
  * Domain Path: /languages/
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /*
  * Globals constants.
  */
-define( 'REVIEWSHAKE_WIDGETS_PLUGIN_VERSION', '1.1.0' );
+define( 'REVIEWSHAKE_WIDGETS_PLUGIN_VERSION', '2.0.0' );
 define( 'REVIEWSHAKE_WIDGETS_MIN_PHP_VER', '5.6.0' );
 define( 'REVIEWSHAKE_WIDGETS_MIN_WP_VER', '4.7.0' );
 define( 'REVIEWSHAKE_WIDGETS_ROOT_PATH', dirname( __FILE__ ) );
@@ -50,7 +50,16 @@ if ( ! class_exists( 'Reviewshake_Widgets' ) ) :
 		 *
 		 * @var string
 		 */
-		public $version = '1.1.0';
+		public $version = '2.0.0';
+
+		/**
+		 * Database version.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @var string
+		 */
+		private static $db_version = '2.0.0';
 
 		/**
 		 * The singelton instance of Reviewshake_Widgets.
@@ -144,12 +153,14 @@ if ( ! class_exists( 'Reviewshake_Widgets' ) ) :
 			include_once REVIEWSHAKE_WIDGETS_ROOT_PATH . '/includes/rest-api/class-reviewshake-widgets-rest-account-controller.php';
 			include_once REVIEWSHAKE_WIDGETS_ROOT_PATH . '/includes/rest-api/class-reviewshake-widgets-rest-review-sources-controller.php';
 			include_once REVIEWSHAKE_WIDGETS_ROOT_PATH . '/includes/rest-api/class-reviewshake-widgets-rest-widgets-controller.php';
+			include_once REVIEWSHAKE_WIDGETS_ROOT_PATH . '/includes/rest-api/class-reviewshake-widgets-rest-widgets-v2-controller.php';
 
 			// Define registered controllers classes array.
 			$controllers = array(
 				Reviewshake_Widgets_REST_Account_Controller::class,
 				Reviewshake_Widgets_REST_Review_Sources_Controller::class,
 				Reviewshake_Widgets_REST_Widgets_Controller::class,
+				Reviewshake_Widgets_REST_Widgets_V2_Controller::class,
 			);
 
 			foreach ( $controllers as $controller_class ) {
@@ -204,12 +215,29 @@ if ( ! class_exists( 'Reviewshake_Widgets' ) ) :
 		/**
 		 * Activation hooks.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 2.0.0
 		 *
 		 * @return void
 		 */
 		public static function activate() {
-			// Nothing to Do for Now.
+			// Requires the upgrade functions.
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+			// Get the current db version from the database.
+			$current_db_version = get_option( 'reviewshake_widgets_db_version', '1.0.0' );
+
+			/*
+			 * Validates version.
+			 */
+			if ( version_compare( self::$db_version, $current_db_version, '>' ) ) {
+				// Updates the upgraded version.
+				update_option( 'reviewshake_widgets_db_version', self::$db_version );
+
+				// Set the widget version as v2.
+				require_once REVIEWSHAKE_WIDGETS_ROOT_PATH . '/includes/functions.php';
+				reviewshake_save_settings( 'widgets_version', 'v2' );
+			}
 		}
 
 		/**

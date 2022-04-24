@@ -23,6 +23,10 @@ $review_sources_db   = isset( $settings['review_sources'] ) ? $settings['review_
 $review_source_count = isset( $review_sources_db ) ? count( $review_sources_db ) : 0;
 $current_plan        = reviewshake_get_current_pricing_plan();
 $review_source_limit = reviewshake_get_review_sources_limit( $current_plan );
+
+// Get widgets version from db.
+$widgets_version = reviewshake_get_widgets_version( $settings );
+
 ?>
 
 <div class="reviewshake-widgets-setup" id="reviewshake-widgets-setup">
@@ -60,16 +64,26 @@ $review_source_limit = reviewshake_get_review_sources_limit( $current_plan );
 
 		<!-- The widgets section -->
 		<?php
-			// Get widgets from db.
+			/*
+			 * Validates widgets version and get widgets from db.
+			 */
+		if ( 'v2' === $widgets_version ) {
+			$widgets = isset( $settings['widgets-v2'] ) ? $settings['widgets-v2'] : array();
+		} else {
 			$widgets = isset( $settings['widgets'] ) ? $settings['widgets'] : array();
+		}
 
 			// Validate if is account exists.
 		if ( $is_account_exists ) {
 			// If not empty widgets then display them rather than display a form.
-			if ( ! empty( $widgets ) ) {
+			if ( ! empty( $widgets ) && 'v2' === $widgets_version ) {
+				include 'views/widgets-v2.php';
+			} elseif ( ! empty( $widgets ) && 'v1' === $widgets_version ) {
 				include 'views/widgets.php';
-			} else {
-				include 'views/create-edit-widget.php';
+			} elseif ( empty( $widgets ) && 'v2' === $widgets_version ) {
+				include 'views/create-edit-widget-v2.php';
+			} elseif ( empty( $widgets ) && 'v1' === $widgets_version ) {
+				include_once 'views/widgets-v1-notice.php';
 			}
 		}
 		?>

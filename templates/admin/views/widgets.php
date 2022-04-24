@@ -5,7 +5,7 @@
  * @var array $settings The plugin settings
  * @var array $widget   The existance widgets array
  *
- * @package Reviewshake_Widgets/Templates/Admin/Vendor
+ * @package Reviewshake_Widgets/Templates/Admin/Views
  * @author Reviewshake
  */
 
@@ -37,21 +37,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<?php echo esc_html( $widget_name . ' - ' . $widget_type ); ?>
 					</h2>
 
-					<div class="widget-actions">
+					<div class="widget-actions" data-version="v1">
 						<input type="button" class="button button-primary edit-widget" value="<?php esc_html_e( 'Edit', 'reviewshake-widgets' ); ?>" />
 						<input type="button" class="button button-primary delete-widget" value="<?php esc_html_e( 'Delete', 'reviewshake-widgets' ); ?>" />
 					</div>
 				</div>
 				<div class="widget-preview">
-					<script src="<?php echo esc_url( $embed ); ?>"></script>
+					<?php
+						// Check it current WordPress version is greater or equal to 5.7.
+					if ( reviewshake_check_wordpress_version( '5.7', '>=' ) ) {
+						wp_print_script_tag(
+							array(
+								'type' => 'text/javascript',
+								'src'  => esc_url( $embed ),
+							)
+						);
+					} else {
+						echo '<script src="' . esc_url( $embed ) . '"></script>';
+					}
+					?>
 				</div>
 			</div>
 		<?php endforeach; ?>
 	</div>
-	<?php if ( 5 > count( $widgets ) ) : ?>
-		<div class="new-widget">
-			<input type="button" class="button button-primary add-new-widget" value="<?php esc_html_e( 'Add new widget', 'reviewshake-widgets' ); ?>"/>
-		</div>
-	<?php endif; ?>
 </div>
 

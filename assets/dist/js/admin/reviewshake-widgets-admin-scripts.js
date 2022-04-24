@@ -175,6 +175,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		e.preventDefault();
 
 		var widget = $(this).closest('.reviewshake-widgets-widget');
+		var version = $(this).closest('.widget-actions').attr('data-version');
 		var widgetID = widget.attr('data-widget-id');
 
 		if (confirm(reviewshake_widgets_params.translations.confirm_delete)) {
@@ -182,7 +183,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			showLoader('reviewshake-widgets-setup-wrap', widget);
 
 			// Delete widget.
-			deleteWidget(widgetID, widget);
+			deleteWidget(widgetID, widget, version);
 		}
 	});
 
@@ -209,6 +210,22 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		$(this).closest('.widget_min_star_rating').find('input[name="ex_star_rating"]').val(exStarRating);
 	});
 
+	/*
+  * V2 widgets : On change minimun star rating input form.
+  */
+	$(document).on('click', '.widget_v2_min_star_rating .star_rating', function (event) {
+		$('.star_rating').removeClass('selected');
+
+		// Initialize the exStarRating array.
+		var exStarRating = [];
+
+		// Get the current clicked star rate.
+		var starRate = $(this).data('star-rate');
+
+		$(this).addClass('selected');
+		$(this).closest('.widget_v2_min_star_rating').find('input[name="min_star_rating"]').val(starRate);
+	});
+
 	/**
   * On submit create/update widget form.
   */
@@ -223,6 +240,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 		// Define errors
 		var errors = false;
+
 		// First remove all errors.
 		form.find('.error').remove();
 
@@ -268,6 +286,66 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		}
 	});
 
+	/**
+  * V2 widgets: On submit create/update widget form.
+  */
+	$(document).on('submit', '#create_widget_v2_form', function (e) {
+		e.preventDefault();
+
+		var form = $(this);
+
+		var widgetID = parseInt(form.attr('data-widget-id'));
+		var name = form.find('input[name="name"]').val();
+		var type = form.find('select[name="widget_type"] option:selected').val();
+
+		// Define errors
+		var errors = false;
+
+		// First remove all errors.
+		form.find('.error').remove();
+
+		// Widget name is a required field.
+		if (name.length <= 0) {
+			form.find('input[name="name"]').after('<span class="error">' + reviewshake_widgets_params.translations.required + '</span');
+			errors = true;
+		}
+
+		// Widget type is a required field.
+		if (type.length <= 0) {
+			form.find('select[name="widget_type"]').after('<span class="error">' + reviewshake_widgets_params.translations.required + '</span');
+			errors = true;
+		}
+
+		/*
+   * Validation errors.
+   */
+		if (errors) {
+			$("html, body").animate({ scrollTop: $('.error').first().offset().top - 70 }, 800);
+			return false;
+		}
+
+		var formData = new FormData(form[0]);
+
+		var plainFormData = Object.fromEntries(formData.entries());
+
+		console.log(plainFormData);
+
+		if (!!widgetID) {
+			widgetID = parseInt(widgetID);
+			plainFormData['id'] = widgetID;
+
+			/**
+    * Update widget.
+    */
+			updateWidgetV2(form, plainFormData);
+		} else {
+			/**
+    * Create new widget
+    */
+			createWidgetV2(form, plainFormData);
+		}
+	});
+
 	/*
   * On click Add/Edit widget
   */
@@ -297,7 +375,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 	});
 
 	/*
-  * On submit connect account form
+  * On submit connect account form.
   */
 	$(document).on('submit', '#connect_account_form', function (event) {
 		event.preventDefault();
@@ -358,6 +436,27 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 		var href = $(this).data('href');
 		window.open(href, '_blank');
+	});
+
+	/*
+  * On change widget version.
+  */
+	$(document).on('change', '.widgets-version-wrap input[name="reviewshake_widgets_widgets_version"]', function (e) {
+		var widgetsVersion = $(this).val();
+
+		var data = {
+			'action': 'reviewshake_save_widgets_version',
+			'nonce': reviewshake_widgets_params.nonce,
+			'version': widgetsVersion
+		};
+
+		saveWidgetsVersion(data).then(function (result) {
+			if (result.success) {
+				$('.widgets-version-wrap .version-loader').hide();
+				$('.widgets-version-wrap input[name="reviewshake_widgets_widgets_version"]').removeAttr('disabled');;
+				console.log(result);
+			}
+		});
 	});
 
 	$(document).ready(function () {
@@ -763,22 +862,196 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 	}();
 
 	/**
-  * Delete Reviewshake widget
+  * V2 widgets: create a new widget.
   *
-  * @param {int}     widgetID The target widget ID.
-  * @param {element} widget   The widget element.
+  * @param {element} form     The form element
+  * @param {object}  formData The form data object
   *
   * @return void
   */
-	var deleteWidget = function () {
-		var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(widgetID, widget) {
-			var deleteWidgetResponse, responseJson, html, message, detail;
+	var createWidgetV2 = function () {
+		var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(form, formData) {
+			var createWidgetResponse, responseJson, snippetHtml, widgetID, widgetType, message, detail;
 			return regeneratorRuntime.wrap(function _callee6$(_context6) {
 				while (1) {
 					switch (_context6.prev = _context6.next) {
 						case 0:
-							_context6.next = 2;
-							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/' + widgetID, {
+							// Show preview loader.
+							showPreviewLoader();
+
+							// Send the create widget request to rest API.
+							_context6.next = 3;
+							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v2/widgets', {
+								method: 'POST',
+								headers: {
+									'content-type': 'application/json',
+									'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
+								},
+								body: JSON.stringify(formData)
+							});
+
+						case 3:
+							createWidgetResponse = _context6.sent;
+							_context6.next = 6;
+							return createWidgetResponse.json();
+
+						case 6:
+							responseJson = _context6.sent;
+
+
+							console.log(responseJson);
+
+							snippetHtml = '';
+
+							if (responseJson.hasOwnProperty('rscode') && 200 == responseJson.rscode) {
+								widgetID = responseJson.data.id;
+								widgetType = responseJson.data.attributes.widget_type;
+
+								// Add the widget ID data attribute.
+
+								form.attr('data-widget-id', widgetID);
+
+								snippetHtml = responseJson.data.attributes.snippet_html;
+
+								/*
+         * Validates switching between widget types.
+         */
+								if ('floating' === widgetType) {
+									$('#widget_type option:eq(1), #widget_type option:eq(2), #widget_type option:eq(3)').remove();
+								} else {
+									$('#widget_type option:eq(0)').remove();
+								}
+
+								// Append the preview widget asynchronously.
+								postscribe('#widget_live_preview', snippetHtml, {
+									done: function done() {
+										console.log('done');
+
+										// Hide preview loader
+										hidePreviewLoader();
+									}
+								});
+							}
+
+							if (!createWidgetResponse.ok && responseJson.hasOwnProperty('message') && responseJson.hasOwnProperty('data')) {
+								message = responseJson.message;
+								detail = responseJson.data.detail;
+
+
+								showPopup(message, detail, true, 'error');
+							}
+
+						case 11:
+						case 'end':
+							return _context6.stop();
+					}
+				}
+			}, _callee6, undefined);
+		}));
+
+		return function createWidgetV2(_x9, _x10) {
+			return _ref6.apply(this, arguments);
+		};
+	}();
+
+	/**
+  * V2 widgets: update the widget.
+  *
+  * @param {element} form     The form element
+  * @param {object}  formData The form data object
+  *
+  * @return void
+  */
+	var updateWidgetV2 = function () {
+		var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(form, formData) {
+			var widgetID, updateWidgetResponse, responseJson, snippetHtml, message, detail;
+			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+				while (1) {
+					switch (_context7.prev = _context7.next) {
+						case 0:
+							// Show preview loader.
+							showPreviewLoader();
+
+							widgetID = formData.id;
+
+							// Send the update widget request to rest API.
+
+							_context7.next = 4;
+							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v2/widgets/' + widgetID, {
+								method: 'PUT',
+								headers: {
+									'content-type': 'application/json',
+									'X-WP-Nonce': reviewshake_widgets_params.wp_rest_nonce
+								},
+								body: JSON.stringify(formData)
+							});
+
+						case 4:
+							updateWidgetResponse = _context7.sent;
+							_context7.next = 7;
+							return updateWidgetResponse.json();
+
+						case 7:
+							responseJson = _context7.sent;
+
+
+							console.log(responseJson);
+
+							snippetHtml = '';
+
+							if (responseJson.hasOwnProperty('rscode') && 200 === responseJson.rscode) {
+								snippetHtml = responseJson.data.attributes.snippet_html;
+
+								// Append the preview widget asynchronously.
+								postscribe('#widget_live_preview', snippetHtml, {
+									done: function done() {
+										console.log('done');
+
+										// Hide preview loader
+										hidePreviewLoader();
+									}
+								});
+							}
+
+							if (!updateWidgetResponse.ok && responseJson.hasOwnProperty('message') && responseJson.hasOwnProperty('message')) {
+								message = responseJson.message;
+								detail = responseJson.data.detail;
+
+								showPopup(message, detail, true, 'error');
+							}
+
+						case 12:
+						case 'end':
+							return _context7.stop();
+					}
+				}
+			}, _callee7, undefined);
+		}));
+
+		return function updateWidgetV2(_x11, _x12) {
+			return _ref7.apply(this, arguments);
+		};
+	}();
+
+	/**
+  * Delete Reviewshake widget
+  *
+  * @param {int}     widgetID The target widget ID.
+  * @param {element} widget   The widget element.
+  * @param {string}  version  The widgets version. Default: v1.
+  *
+  * @return void
+  */
+	var deleteWidget = function () {
+		var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(widgetID, widget) {
+			var version = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'v1';
+			var deleteWidgetResponse, responseJson, html, message, detail;
+			return regeneratorRuntime.wrap(function _callee8$(_context8) {
+				while (1) {
+					switch (_context8.prev = _context8.next) {
+						case 0:
+							_context8.next = 2;
+							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/' + version + '/widgets/' + widgetID, {
 								method: 'DELETE',
 								headers: {
 									'content-type': 'application/json',
@@ -787,12 +1060,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							deleteWidgetResponse = _context6.sent;
-							_context6.next = 5;
+							deleteWidgetResponse = _context8.sent;
+							_context8.next = 5;
 							return deleteWidgetResponse.json();
 
 						case 5:
-							responseJson = _context6.sent;
+							responseJson = _context8.sent;
 
 
 							if (deleteWidgetResponse.ok && responseJson.deleted) {
@@ -825,14 +1098,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 11:
 						case 'end':
-							return _context6.stop();
+							return _context8.stop();
 					}
 				}
-			}, _callee6, undefined);
+			}, _callee8, undefined);
 		}));
 
-		return function deleteWidget(_x9, _x10) {
-			return _ref6.apply(this, arguments);
+		return function deleteWidget(_x14, _x15) {
+			return _ref8.apply(this, arguments);
 		};
 	}();
 
@@ -845,13 +1118,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var deleteReviewSource = function () {
-		var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(sourceID, reviewSource) {
+		var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(sourceID, reviewSource) {
 			var deleteSourceResponse, responseJson, html, message, detail;
-			return regeneratorRuntime.wrap(function _callee7$(_context7) {
+			return regeneratorRuntime.wrap(function _callee9$(_context9) {
 				while (1) {
-					switch (_context7.prev = _context7.next) {
+					switch (_context9.prev = _context9.next) {
 						case 0:
-							_context7.next = 2;
+							_context9.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/review_sources/' + sourceID, {
 								method: 'DELETE',
 								headers: {
@@ -861,12 +1134,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							deleteSourceResponse = _context7.sent;
-							_context7.next = 5;
+							deleteSourceResponse = _context9.sent;
+							_context9.next = 5;
 							return deleteSourceResponse.json();
 
 						case 5:
-							responseJson = _context7.sent;
+							responseJson = _context9.sent;
 
 
 							if (responseJson.deleted) {
@@ -901,14 +1174,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 10:
 						case 'end':
-							return _context7.stop();
+							return _context9.stop();
 					}
 				}
-			}, _callee7, undefined);
+			}, _callee9, undefined);
 		}));
 
-		return function deleteReviewSource(_x11, _x12) {
-			return _ref7.apply(this, arguments);
+		return function deleteReviewSource(_x16, _x17) {
+			return _ref9.apply(this, arguments);
 		};
 	}();
 
@@ -924,17 +1197,18 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @return void
   */
 	var createAccount = function () {
-		var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(source, sourceUrl, googlePlaceId, form, isAccountExists) {
+		var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(source, sourceUrl, googlePlaceId, form, isAccountExists) {
 			var secToSleep = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 20;
 
-			var sourcesCount, pricingPlan, body, createAccountResponse, createAccountJson, attributes, accountDomain, email, tryGetAccount, listWidgetsJson, _body2, addReviewSources;
+			var sourcesCount, pricingPlan, widgetsVersion, body, createAccountResponse, createAccountJson, attributes, accountDomain, email, tryGetAccount, listWidgetsJson, _body2, addReviewSources;
 
-			return regeneratorRuntime.wrap(function _callee9$(_context9) {
+			return regeneratorRuntime.wrap(function _callee11$(_context11) {
 				while (1) {
-					switch (_context9.prev = _context9.next) {
+					switch (_context11.prev = _context11.next) {
 						case 0:
 							sourcesCount = parseInt(form.attr('data-sources-count'));
 							pricingPlan = form.attr('data-pricing-plan');
+							widgetsVersion = reviewshake_widgets_params.widgetsVersion;
 
 							// If is first review source.
 
@@ -948,7 +1222,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         */
 
 							if (!(isAccountExists.length <= 0)) {
-								_context9.next = 21;
+								_context11.next = 22;
 								break;
 							}
 
@@ -960,7 +1234,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 							// Send the create new account request to rest API 
 
-							_context9.next = 7;
+							_context11.next = 8;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/', {
 								method: 'POST',
 								headers: {
@@ -970,24 +1244,24 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 								body: JSON.stringify(body)
 							});
 
-						case 7:
-							createAccountResponse = _context9.sent;
-							_context9.next = 10;
+						case 8:
+							createAccountResponse = _context11.sent;
+							_context11.next = 11;
 							return createAccountResponse.json();
 
-						case 10:
-							createAccountJson = _context9.sent;
+						case 11:
+							createAccountJson = _context11.sent;
 
 
 							console.log('beforeSleep');
 
 							// Wait for x seconds to get account created.
-							_context9.next = 14;
+							_context11.next = 15;
 							return new Promise(function (resolve) {
 								return isAccountExists == '' ? setTimeout(resolve, secToSleep * 1000) : resolve();
 							});
 
-						case 14:
+						case 15:
 
 							console.log('afterSleep');
 
@@ -997,14 +1271,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 							// Set interval every 5 seconds to check account fully created.
 
-							tryGetAccount = setInterval(_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {
+							tryGetAccount = setInterval(_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {
 								var getAccountResponse, getAccountJson, _attributes, id, type, apiKey, convertToFree, listWidgetsJson, count, _body, addReviewSources;
 
-								return regeneratorRuntime.wrap(function _callee8$(_context8) {
+								return regeneratorRuntime.wrap(function _callee10$(_context10) {
 									while (1) {
-										switch (_context8.prev = _context8.next) {
+										switch (_context10.prev = _context10.next) {
 											case 0:
-												_context8.next = 2;
+												_context10.next = 2;
 												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/?' + new URLSearchParams({
 													email: email
 												}), {
@@ -1016,15 +1290,15 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												});
 
 											case 2:
-												getAccountResponse = _context8.sent;
-												_context8.next = 5;
+												getAccountResponse = _context10.sent;
+												_context10.next = 5;
 												return getAccountResponse.json();
 
 											case 5:
-												getAccountJson = _context8.sent;
+												getAccountJson = _context10.sent;
 
 												if (!(getAccountJson.hasOwnProperty('data') && getAccountJson.data.hasOwnProperty('attributes'))) {
-													_context8.next = 36;
+													_context10.next = 36;
 													break;
 												}
 
@@ -1044,11 +1318,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												// If account is on trial plan.
 
 												if (!('' == pricingPlan || 'trial' === pricingPlan)) {
-													_context8.next = 20;
+													_context10.next = 20;
 													break;
 												}
 
-												_context8.next = 18;
+												_context10.next = 18;
 												return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/account/' + apiKey + '/' + accountDomain, {
 													method: 'PUT',
 													headers: {
@@ -1058,7 +1332,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 												});
 
 											case 18:
-												convertToFree = _context8.sent;
+												convertToFree = _context10.sent;
 
 												console.log('Account get a free plan');
 
@@ -1066,14 +1340,14 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 												console.log('after trial api');
 
-												_context8.next = 23;
-												return listWidgets();
+												_context10.next = 23;
+												return listWidgets(widgetsVersion);
 
 											case 23:
-												listWidgetsJson = _context8.sent;
+												listWidgetsJson = _context10.sent;
 
 												if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-													_context8.next = 35;
+													_context10.next = 35;
 													break;
 												}
 
@@ -1098,11 +1372,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
              * @param {element} form - The create review source form.
              */
 
-												_context8.next = 31;
+												_context10.next = 31;
 												return addReviewSource(_body, form);
 
 											case 31:
-												addReviewSources = _context8.sent;
+												addReviewSources = _context10.sent;
 
 
 												// Wp Color Picker.
@@ -1120,23 +1394,23 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 											case 36:
 											case 'end':
-												return _context8.stop();
+												return _context10.stop();
 										}
 									}
-								}, _callee8, undefined);
+								}, _callee10, undefined);
 							})), 5000);
-							_context9.next = 32;
+							_context11.next = 33;
 							break;
 
-						case 21:
-							_context9.next = 23;
-							return listWidgets();
+						case 22:
+							_context11.next = 24;
+							return listWidgets(widgetsVersion);
 
-						case 23:
-							listWidgetsJson = _context9.sent;
+						case 24:
+							listWidgetsJson = _context11.sent;
 
 							if (!(listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode)) {
-								_context9.next = 32;
+								_context11.next = 33;
 								break;
 							}
 
@@ -1155,11 +1429,11 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
         * @param {element} form - The create review source form.
         */
 
-							_context9.next = 28;
+							_context11.next = 29;
 							return addReviewSource(_body2, form);
 
-						case 28:
-							addReviewSources = _context9.sent;
+						case 29:
+							addReviewSources = _context11.sent;
 
 
 							// Wp Color Picker.
@@ -1171,16 +1445,16 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							// Hide Loader.
 							hideLoader();
 
-						case 32:
+						case 33:
 						case 'end':
-							return _context9.stop();
+							return _context11.stop();
 					}
 				}
-			}, _callee9, undefined);
+			}, _callee11, undefined);
 		}));
 
-		return function createAccount(_x14, _x15, _x16, _x17, _x18) {
-			return _ref8.apply(this, arguments);
+		return function createAccount(_x19, _x20, _x21, _x22, _x23) {
+			return _ref10.apply(this, arguments);
 		};
 	}();
 
@@ -1191,13 +1465,13 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
   * @param {element} form - The create review source form.
   */
 	var addReviewSource = function () {
-		var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(body, form) {
+		var _ref12 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(body, form) {
 			var addReviewSource, reviewSourceJson, html, successTitle, successMessage, requireUpgrade, message, detail;
-			return regeneratorRuntime.wrap(function _callee10$(_context10) {
+			return regeneratorRuntime.wrap(function _callee12$(_context12) {
 				while (1) {
-					switch (_context10.prev = _context10.next) {
+					switch (_context12.prev = _context12.next) {
 						case 0:
-							_context10.next = 2;
+							_context12.next = 2;
 							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/review_sources/', {
 								method: 'POST',
 								headers: {
@@ -1208,12 +1482,12 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							addReviewSource = _context10.sent;
-							_context10.next = 5;
+							addReviewSource = _context12.sent;
+							_context12.next = 5;
 							return addReviewSource.json();
 
 						case 5:
-							reviewSourceJson = _context10.sent;
+							reviewSourceJson = _context12.sent;
 
 
 							console.log(reviewSourceJson);
@@ -1256,31 +1530,37 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 						case 8:
 						case 'end':
-							return _context10.stop();
+							return _context12.stop();
 					}
 				}
-			}, _callee10, undefined);
+			}, _callee12, undefined);
 		}));
 
-		return function addReviewSource(_x19, _x20) {
-			return _ref10.apply(this, arguments);
+		return function addReviewSource(_x24, _x25) {
+			return _ref12.apply(this, arguments);
 		};
 	}();
 
 	/**
   * List all widgets for the current reviewshaka account.
   *
+  * @param {string} widgetsVersion The widgets version. Default: v2.
+  *
+  * @since   1.0.0
+  * @version 2.0.0
+  *
   * @return {JSON} listWidgetsJson.
   */
 	var listWidgets = function () {
-		var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {
+		var _ref13 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13() {
+			var widgetsVersion = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'v2';
 			var listWidgets, listWidgetsJson;
-			return regeneratorRuntime.wrap(function _callee11$(_context11) {
+			return regeneratorRuntime.wrap(function _callee13$(_context13) {
 				while (1) {
-					switch (_context11.prev = _context11.next) {
+					switch (_context13.prev = _context13.next) {
 						case 0:
-							_context11.next = 2;
-							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/v1/widgets/', {
+							_context13.next = 2;
+							return fetch(reviewshake_widgets_params.site_url + '/wp-json/reviewshake/' + widgetsVersion + '/widgets/', {
 								method: 'GET',
 								headers: {
 									'content-type': 'application/json',
@@ -1289,24 +1569,74 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 							});
 
 						case 2:
-							listWidgets = _context11.sent;
-							_context11.next = 5;
+							listWidgets = _context13.sent;
+							_context13.next = 5;
 							return listWidgets.json();
 
 						case 5:
-							listWidgetsJson = _context11.sent;
-							return _context11.abrupt('return', listWidgetsJson);
+							listWidgetsJson = _context13.sent;
+							return _context13.abrupt('return', listWidgetsJson);
 
 						case 7:
 						case 'end':
-							return _context11.stop();
+							return _context13.stop();
 					}
 				}
-			}, _callee11, undefined);
+			}, _callee13, undefined);
 		}));
 
 		return function listWidgets() {
-			return _ref11.apply(this, arguments);
+			return _ref13.apply(this, arguments);
+		};
+	}();
+
+	/**
+  * Save the choosen widgets version to database.
+  *
+  * @param {object} data The object data to send to ajax
+  *
+  * @return {object|WP_Error}
+  */
+	var saveWidgetsVersion = function () {
+		var _ref14 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(data) {
+			var result;
+			return regeneratorRuntime.wrap(function _callee14$(_context14) {
+				while (1) {
+					switch (_context14.prev = _context14.next) {
+						case 0:
+							result = void 0;
+							_context14.prev = 1;
+							_context14.next = 4;
+							return $.ajax({
+								url: reviewshake_widgets_params.ajax_url,
+								type: 'POST',
+								data: data,
+								beforeSend: function beforeSend() {
+									$('.widgets-version-wrap .version-loader').show();
+									$('.widgets-version-wrap input[name="reviewshake_widgets_widgets_version"]').attr('disabled', true);
+								}
+							});
+
+						case 4:
+							result = _context14.sent;
+							return _context14.abrupt('return', result);
+
+						case 8:
+							_context14.prev = 8;
+							_context14.t0 = _context14['catch'](1);
+
+							console.error(_context14.t0);
+
+						case 11:
+						case 'end':
+							return _context14.stop();
+					}
+				}
+			}, _callee14, undefined, [[1, 8]]);
+		}));
+
+		return function saveWidgetsVersion(_x27) {
+			return _ref14.apply(this, arguments);
 		};
 	}();
 

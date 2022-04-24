@@ -80,7 +80,7 @@ function reviewshake_create_new_account( $subdomain ) {
 		'https://app.reviewshake.com/api/v2/platform/free_account',
 		array(
 			'method'      => 'POST',
-			'timeout'     => 0,
+			'timeout'     => 30,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -132,7 +132,7 @@ function reviewshake_get_account_status( $email, $password = 'cnMxMjM0NTY=' ) {
 		'https://app.reviewshake.com/api/v2/platform/account_status?' . $parameters,
 		array(
 			'method'      => 'GET',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -173,7 +173,7 @@ function reviewshake_get_account_info( $api_key, $account_domain ) {
 		"https://{$account_domain}/api/v2/organization",
 		array(
 			'method'      => 'GET',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -227,7 +227,7 @@ function reviewshake_turn_account_to_free_plan( $api_key, $account_domain ) {
 		"https://{$account_domain}/api/v2/organization/free_plan",
 		array(
 			'method'      => 'PUT',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -269,7 +269,7 @@ function reviewshake_get_list_of_review_sources( $account_domain, $api_key ) {
 		"https://{$account_domain}/api/v2/review_sources",
 		array(
 			'method'      => 'GET',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -322,7 +322,7 @@ function reviewshake_add_review_source( $data ) {
 		'https://' . $data['subdomain'] . '/api/v2/review_sources',
 		array(
 			'method'      => 'POST',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -365,7 +365,7 @@ function reviewshake_delete_review_source( $account_domain, $api_key, $source_id
 		"https://{$account_domain}/api/v2/review_sources/{$source_id}",
 		array(
 			'method'      => 'DELETE',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -388,25 +388,31 @@ function reviewshake_delete_review_source( $account_domain, $api_key, $source_id
 /**
  * Lists the widgets of given account data.
  *
- * @param string $account_domain The account bdomain.
- * @param string $api_key        The API key.
+ * @param string $account_domain  The account bdomain.
+ * @param string $api_key         The API key.
+ * @param string $widgets_version The widgets version. Defualt: v1.
  *
  * @since 1.0.0
  *
  * @return object $response_body
  */
-function reviewshake_get_list_of_widgets( $account_domain, $api_key ) {
+function reviewshake_get_list_of_widgets( $account_domain, $api_key, $widgets_version = 'v1' ) {
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token' => $api_key,
-		'Content-Type'  => 'application/json',
+		'Content-Type' => 'application/json',
 	);
 
+	if ( 'v2' === $widgets_version ) {
+		$headers['Authorization'] = $api_key;
+	} else {
+		$headers['X-Spree-Token'] = $api_key;
+	}
+
 	$response = wp_remote_get(
-		"https://{$account_domain}/api/v1/widgets",
+		"https://{$account_domain}/api/{$widgets_version}/widgets",
 		array(
 			'method'      => 'GET',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -429,26 +435,32 @@ function reviewshake_get_list_of_widgets( $account_domain, $api_key ) {
 /**
  * Get widget info details from reviewshake account.
  *
- * @param int    $id             The widget ID.
- * @param string $account_domain The account subdomain.
- * @param string $api_key        The API key.
+ * @param int    $id              The widget ID.
+ * @param string $account_domain  The account subdomain.
+ * @param string $api_key         The API key.
+ * @param string $widgets_version The widgets version.
  *
  * @since 1.0.0
  *
  * @return object $response_body
  */
-function reviewshake_get_widget( $id, $account_domain, $api_key ) {
+function reviewshake_get_widget( $id, $account_domain, $api_key, $widgets_version = 'v1' ) {
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token' => $api_key,
-		'Content-Type'  => 'application/json',
+		'Content-Type' => 'application/json',
 	);
 
+	if ( 'v2' === $widgets_version ) {
+		$headers['Authorization'] = $api_key;
+	} else {
+		$headers['X-Spree-Token'] = $api_key;
+	}
+
 	$response = wp_remote_get(
-		"https://{$account_domain}/api/v1/widgets/{$id}",
+		"https://{$account_domain}/api/{$widgets_version}/widgets/{$id}",
 		array(
 			'method'      => 'GET',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -472,31 +484,42 @@ function reviewshake_get_widget( $id, $account_domain, $api_key ) {
 /**
  * Create new widget to Reviewshake account.
  *
- * @param array  $data           The form data.
- * @param string $account_domain The account domain.
- * @param string $api_key        The API key.
+ * @param array  $data            The form data.
+ * @param string $account_domain  The account domain.
+ * @param string $api_key         The API key.
+ * @param string $widgets_version The widgets version. Defualt: v1.
  *
- * @since 1.0.0
+ * @since   1.0.0
+ * @version 2.0.0
  *
  * @return object $response_body
  */
-function reviewshake_create_widget( $data, $account_domain, $api_key ) {
+function reviewshake_create_widget( $data, $account_domain, $api_key, $widgets_version = 'v1' ) {
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token' => $api_key,
-		'Content-Type'  => 'application/json',
+		'Content-Type' => 'application/json',
+	);
+
+	if ( 'v1' === $widgets_version ) {
+		$headers['X-Spree-Token'] = $api_key;
+	} elseif ( 'v2' === $widgets_version ) {
+		$headers['Authorization'] = $api_key;
+	}
+
+	$request_body = array(
+		'widget' => $data,
 	);
 
 	$response = wp_remote_post(
-		"https://{$account_domain}/api/v1/widgets",
+		"https://{$account_domain}/api/{$widgets_version}/widgets",
 		array(
 			'method'      => 'POST',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
 			'headers'     => $headers,
-			'body'        => json_encode( $data ),
+			'body'        => json_encode( $request_body ),
 			'cookies'     => array(),
 		)
 	);
@@ -515,15 +538,17 @@ function reviewshake_create_widget( $data, $account_domain, $api_key ) {
 /**
  * Update widget.
  *
- * @param array  $data           The form data.
- * @param string $account_domain The account subdomain.
- * @param string $api_key        The API key.
+ * @param array  $data            The form data.
+ * @param string $account_domain  The account subdomain.
+ * @param string $api_key         The API key.
+ * @param string $widgets_version The widgets version. Defualt: v1.
  *
- * @since 1.0.0
+ * @since   1.0.0
+ * @version 2.0.0
  *
  * @return object $response_body
  */
-function reviewshake_update_widget( $data, $account_domain, $api_key ) {
+function reviewshake_update_widget( $data, $account_domain, $api_key, $widgets_version = 'v1' ) {
 	// Validate widget ID.
 	if ( ! isset( $data['id'] ) || 0 >= $data['id'] ) {
 		return new WP_Error(
@@ -538,20 +563,29 @@ function reviewshake_update_widget( $data, $account_domain, $api_key ) {
 
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token' => $api_key,
-		'Content-Type'  => 'application/json',
+		'Content-Type' => 'application/json',
+	);
+
+	if ( 'v2' === $widgets_version ) {
+		$headers['Authorization'] = $api_key;
+	} else {
+		$headers['X-Spree-Token'] = $api_key;
+	}
+
+	$request_body = array(
+		'widget' => $data,
 	);
 
 	$response = wp_remote_request(
-		"https://{$account_domain}/api/v1/widgets/{$data['id']}",
+		"https://{$account_domain}/api/{$widgets_version}/widgets/{$data['id']}",
 		array(
 			'method'      => 'PUT',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
 			'headers'     => $headers,
-			'body'        => json_encode( $data ),
+			'body'        => json_encode( $request_body ),
 			'cookies'     => array(),
 		)
 	);
@@ -570,26 +604,32 @@ function reviewshake_update_widget( $data, $account_domain, $api_key ) {
 /**
  * Delete Widget.
  *
- * @param int    $id             The widget ID.
- * @param string $account_domain The account subdomain.
- * @param string $api_key        The API key.
+ * @param int    $id              The widget ID.
+ * @param string $account_domain  The account subdomain.
+ * @param string $api_key         The API key.
+ * @param string $widgets_version The widgets version. Defualt: v1.
  *
  * @since 1.0.0
  *
  * @return object $response_body
  */
-function reviewshake_delete_widget( $id, $account_domain, $api_key ) {
+function reviewshake_delete_widget( $id, $account_domain, $api_key, $widgets_version = 'v1' ) {
 	// The HTTP headers.
 	$headers = array(
-		'X-Spree-Token' => $api_key,
-		'Content-Type'  => 'application/json',
+		'Content-Type' => 'application/json',
 	);
 
+	if ( 'v1' === $widgets_version ) {
+		$headers['X-Spree-Token'] = $api_key;
+	} elseif ( 'v2' === $widgets_version ) {
+		$headers['Authorization'] = $api_key;
+	}
+
 	$response = wp_remote_request(
-		"https://{$account_domain}/api/v1/widgets/{$id}",
+		"https://{$account_domain}/api/{$widgets_version}/widgets/{$id}",
 		array(
 			'method'      => 'DELETE',
-			'timeout'     => 0,
+			'timeout'     => 10,
 			'redirection' => 10,
 			'httpversion' => '1.0',
 			'blocking'    => true,
@@ -650,21 +690,27 @@ function reviewshake_remove_review_source( $source_id ) {
 /**
  * Removes widget from database.
  *
- * @param int $widget_id The widget ID.
+ * @param int    $widget_id The widget ID.
+ * @param string $widgets_version The widgets version. Defualt: v1.
  *
  * @since 1.0.0
  *
  * @return bool|WP_Error
  */
-function reviewshake_remove_widget( $widget_id ) {
-	$settings = get_option( 'reviewshake_widgets_settings', array() );
+function reviewshake_remove_widget( $widget_id, $widgets_version = 'v1' ) {
+	$settings       = get_option( 'reviewshake_widgets_settings', array() );
+	$widgets_prefix = 'widgets';
+
+	if ( 'v2' === $widgets_version ) {
+		$widgets_prefix = 'widgets-v2';
+	}
 
 	if ( $widget_id ) {
 		$prefix = 'widget';
 
 		$widget_id = (string) $prefix . $widget_id;
 
-		if ( ! isset( $settings['widgets'][ $widget_id ] ) ) {
+		if ( ! isset( $settings[ $widgets_prefix ][ $widget_id ] ) ) {
 			return new WP_Error(
 				'reviewshake_invalid_review_widget_id',
 				__( 'Invalid Widget ID', 'reviewshake-widgets' ),
@@ -679,7 +725,7 @@ function reviewshake_remove_widget( $widget_id ) {
 		}
 
 		// Unset review source from sources array.
-		unset( $settings['widgets'][ $widget_id ] );
+		unset( $settings[ $widgets_prefix ][ $widget_id ] );
 
 		return update_option( 'reviewshake_widgets_settings', $settings );
 	}
@@ -703,6 +749,7 @@ function reviewshake_save_settings( string $settings_key, $data, $override = fal
 		switch ( $settings_key ) {
 			case 'review_sources':
 			case 'widgets':
+			case 'widgets-v2':
 				if ( empty( $data ) || $override ) {
 					$settings[ $settings_key ] = array();
 				}
@@ -718,6 +765,10 @@ function reviewshake_save_settings( string $settings_key, $data, $override = fal
 					$settings[ $settings_key ][ $key ] = reviewshake_sanitize( $key, $value );
 				}
 				break;
+
+			case 'widgets_version':
+				$settings[ $settings_key ] = reviewshake_sanitize( $settings_key, $data );
+				break;
 			default:
 				return false;
 		}
@@ -731,14 +782,16 @@ function reviewshake_save_settings( string $settings_key, $data, $override = fal
 /**
  * Sanitize fields to be saved to the database.
  *
- * @param string $key   The field key.
- * @param string $value The field value to be sanitized.
+ * @param string $key            The field key.
+ * @param string $value          The field value to be sanitized.
+ * @param string $widgets_version The widget version - Default: v1.
  *
- * @since 1.0.0
+ * @since   1.0.0
+ * @version 2.0.0
  *
  * @return string The sanitized value.
  */
-function reviewshake_sanitize( $key, $value ) {
+function reviewshake_sanitize( $key, $value, $widgets_version = 'v1' ) {
 	switch ( $key ) {
 		case 'email':
 			return sanitize_email( $value );
@@ -746,10 +799,16 @@ function reviewshake_sanitize( $key, $value ) {
 		case 'account_domain':
 		case 'source_url_text':
 		case 'google_place_id':
+		case 'widgets_version':
+		case 'position':
+		case 'type':
+		case 'name':
+		case 'widget_type':
 			return sanitize_text_field( $value );
 
 		case 'source_url':
 		case 'embed':
+		case 'url':
 			return esc_url( $value );
 
 		case 'id':
@@ -757,7 +816,6 @@ function reviewshake_sanitize( $key, $value ) {
 		case 'company_id':
 		case 'client_id':
 		case 'subuser_id':
-		case 'display_mode':
 		case 'max_reviews':
 		case 'width':
 		case 'height':
@@ -767,7 +825,16 @@ function reviewshake_sanitize( $key, $value ) {
 		case 'title_font_weight':
 		case 'request_no':
 		case 'sec_to_sleep':
+		case 'waiting_time':
+		case 'min_star_rating':
 			return absint( $value );
+
+		case 'display_mode':
+			if ( 'v2' === $widgets_version ) {
+				return sanitize_text_field( $value );
+			} else {
+				return absint( $value );
+			}
 
 		case 'ex_reviews_source':
 			$sanitized_value = array();
@@ -791,10 +858,32 @@ function reviewshake_sanitize( $key, $value ) {
 		case 'rich_snippet':
 		case 'ex_empty_reviews':
 		case 'request_button':
+		case 'hide_empty_reviews':
+		case 'show_on_mobile':
 			return rest_sanitize_boolean( $value );
 
 		case 'display_elements':
-			return wp_parse_id_list( $value );
+			if ( 'v2' === $widgets_version && ( is_array( $value ) || is_object( $value ) ) ) {
+				$sanitized_value = array();
+				foreach ( $value as $key2 => $value2 ) {
+					$sanitized_value[ $key2 ] = rest_sanitize_boolean( $value2 );
+				}
+				return $sanitized_value;
+			} else {
+				return wp_parse_id_list( $value );
+			}
+
+		case 'colors':
+		case 'fonts':
+		case 'excluded_review_sources':
+			$sanitized_value = array();
+			if ( is_object( $value ) || is_array( $value ) ) {
+				foreach ( $value as $key2 => $value2 ) {
+					$sanitized_value[ $key2 ] = sanitize_text_field( $value2 );
+				}
+			}
+
+			return $sanitized_value;
 
 		case 'rich_snippet_meta_data':
 			$sanitized_value = (object) array();
@@ -813,6 +902,9 @@ function reviewshake_sanitize( $key, $value ) {
 				}
 			}
 			return $sanitized_value;
+
+		case 'snippet_html':
+			return htmlentities( $value );
 
 		default:
 			return sanitize_text_field( $value );
@@ -1077,18 +1169,25 @@ function reviewshake_renders_account_tab_content() {
 }
 
 /**
- * Renders create/edit widget form.
+ * Renders create, edit widget form.
  *
- * @param int $widget_id The widget ID - Default: 0.
+ * @param int $widget_id       The widget ID - Default: 0.
  *
  * @since 1.0.0
  *
  * @return mixed HTML
  */
 function reviewshake_render_widget_form( $widget_id = 0 ) {
+	// Get widgets version.
+	$widgets_version = reviewshake_get_widgets_version();
+
 	ob_start();
 		echo '<div class="reviewshake-widgets-setup-wrap">';
-			include REVIEWSHAKE_WIDGETS_TEMPLATES_PATH . 'admin/views/create-edit-widget.php';
+	if ( 'v2' === $widgets_version ) {
+		include_once REVIEWSHAKE_WIDGETS_TEMPLATES_PATH . 'admin/views/create-edit-widget-v2.php';
+	} else {
+		include_once REVIEWSHAKE_WIDGETS_TEMPLATES_PATH . 'admin/views/create-edit-widget.php';
+	}
 		echo '</div';
 	return ob_get_clean();
 }
@@ -1106,6 +1205,26 @@ function reviewshake_render_connect_account_form() {
 			include REVIEWSHAKE_WIDGETS_TEMPLATES_PATH . 'admin/views/connect-account-form.php';
 		echo '</div';
 	return ob_get_clean();
+}
+
+/**
+ * Get the current widgets version.
+ *
+ * @param array $settings The plugin settings, Default: null.
+ *
+ * @since 2.0.0
+ *
+ * @return string $widgets_version - Default: v2.
+ */
+function reviewshake_get_widgets_version( $settings = null ) {
+	if ( ! $settings ) {
+		$settings = get_option( 'reviewshake_widgets_settings', array() );
+	}
+
+	// Get widgets version from db.
+	$widgets_version = isset( $settings['widgets_version'] ) ? $settings['widgets_version'] : 'v2';
+
+	return $widgets_version;
 }
 
 /**
@@ -1185,12 +1304,16 @@ function reviewshake_rest_list_review_sources() {
 /**
  * List the widgets linked to the connected account.
  *
- * @since 1.0.0
+ * @since   1.0.0
+ * @version 2.0.0
  *
  * @return object $data The widgets response object
  */
 function reviewshake_rest_list_widgets() {
-	$request  = new WP_REST_Request( 'GET', '/reviewshake/v1/widgets' );
+	// Get the widgets version.
+	$widgets_version = reviewshake_get_widgets_version();
+
+	$request  = new WP_REST_Request( 'GET', "/reviewshake/{$widgets_version}/widgets" );
 	$response = rest_do_request( $request );
 	$server   = rest_get_server();
 	$data     = $server->response_to_data( $response, false );
@@ -1223,4 +1346,39 @@ function reviewshake_get_error_messages( $errors ) {
 	}
 
 	return $message;
+}
+
+/**
+ * Converts rgb to hex value.
+ *
+ * @param string $rgba The rgba color string.
+ *
+ * @since 2.0.0
+ *
+ * @return string
+ */
+function reviewshake_convert_rgb_to_hex( string $rgba ) : string {
+	if ( strpos( $rgba, '#' ) === 0 ) {
+		return $rgba;
+	}
+
+	preg_match( '/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i', $rgba, $by_color );
+
+	return sprintf( '#%02x%02x%02x', $by_color[1], $by_color[2], $by_color[3] );
+}
+
+/**
+ * Check WordPress against specific versions.
+ *
+ * @param string $version  The version to check with.
+ * @param string $operator The operator.
+ *
+ * @since 2.0.0
+ *
+ * @return boolean
+ */
+function reviewshake_check_wordpress_version( $version, $operator ) {
+	global $wp_version;
+
+	return version_compare( $wp_version, $version, $operator );
 }

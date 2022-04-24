@@ -1,6 +1,6 @@
 <?php
 /**
- * REST API: Reviewshake_Widgets_REST_Widgets_Controller class.
+ * REST API: Reviewshake_Widgets_REST_Widgets_V2_Controller class.
  *
  * @package Reviewshake_Widgets
  * @subpackage REST_API
@@ -17,16 +17,16 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 	 *
 	 * Core class used to manage reviewshake widgets via the REST API.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @see WP_REST_Controller
 	 */
-	class Reviewshake_Widgets_REST_Widgets_Controller extends WP_REST_Controller {
+	class Reviewshake_Widgets_REST_Widgets_V2_Controller extends WP_REST_Controller {
 
 		/**
 		 * The version of this controller's route.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 * @var string
 		 */
 		protected $version;
@@ -34,7 +34,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * The plugin settings.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 * @var array
 		 */
 		private $settings;
@@ -42,7 +42,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * The account domain.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 * @var string
 		 */
 		protected $account_domain;
@@ -50,7 +50,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * The API key.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 * @var string
 		 */
 		protected $api_key;
@@ -58,12 +58,12 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * The constructor.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return void
 		 */
 		public function __construct() {
-			$this->version   = '1';
+			$this->version   = '2';
 			$this->namespace = 'reviewshake/v' . $this->version;
 			$this->rest_base = 'widgets';
 
@@ -122,13 +122,12 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					),
 				)
 			);
-
 		}
 
 		/**
 		 * Check if a given request has access to get items.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
@@ -141,7 +140,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Get all widgets.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
@@ -167,7 +166,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 			}
 
 			if ( function_exists( 'reviewshake_get_list_of_widgets' ) ) {
-				$widgets = reviewshake_get_list_of_widgets( $account_domain, $api_key );
+				$widgets = reviewshake_get_list_of_widgets( $account_domain, $api_key, 'v2' );
 
 				// Validate errors.
 				if ( isset( $result->rscode ) && 200 !== $result->rscode ) {
@@ -193,7 +192,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				 * Returning a WP_Error value from the filter will short-circuit insertion and allow
 				 * skipping further processing.
 				 *
-				 * @since 1.0.0
+				 * @since 2.0.0
 				 *
 				 * @param array|WP_Error  $prepared_sources The prepared review sources data for insertion.
 				 * @param WP_REST_Request $request          Request used to insert the comment.
@@ -204,7 +203,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					return $prepared_widgets;
 				}
 
-				$save_widgets = reviewshake_save_settings( 'widgets', $prepared_widgets, true );
+				$save_widgets = reviewshake_save_settings( 'widgets-v2', $prepared_widgets, true );
 
 				if ( is_object( $widgets ) ) {
 					$widgets->count = count( $prepared_widgets );
@@ -227,11 +226,11 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		}
 
 		/**
-		 * Create one item from the collection
+		 * Create one item from the collection.
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return WP_Error|WP_REST_Response
 		 */
@@ -243,7 +242,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 			}
 
 			if ( function_exists( 'reviewshake_create_widget' ) ) {
-				$widget = reviewshake_create_widget( $data, $this->account_domain, $this->api_key );
+				$widget = reviewshake_create_widget( $data, $this->account_domain, $this->api_key, 'v2' );
 
 				// Validate errors.
 				if ( isset( $widget->rscode ) && 200 !== $widget->rscode ) {
@@ -255,7 +254,9 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					return new WP_Error( 'reviewshake_error_on_create_widget', $message, $args );
 				}
 
-				if ( ! isset( $widget->id ) || ! isset( $widget->embed ) ) {
+				$widget_data = $widget->data;
+
+				if ( ! isset( $widget_data->id ) || ! isset( $widget_data->attributes->url ) || ! isset( $widget_data->attributes->snippet_html ) ) {
 					return new WP_Error(
 						'reviewshake_error_on_create_widget',
 						esc_html__( 'Create Widget', 'reviewshake-widgets' ),
@@ -269,16 +270,10 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					);
 				}
 
-				// Append to the prepared data.
-				$data['id']    = reviewshake_sanitize( 'id', $widget->id );
-				$data['embed'] = reviewshake_sanitize( 'embed', $widget->embed );
+				// Prepared widget data to be saved into db.
+				$prepared_widget = $this->prepare_widget_for_database( $widget );
 
-				$prefix               = 'widget';
-				$key                  = (string) $prefix . $data['id'];
-				$widget_array         = array();
-				$widget_array[ $key ] = $data;
-
-				$save_widget = reviewshake_save_settings( 'widgets', $widget_array );
+				$save_widget = reviewshake_save_settings( 'widgets-v2', $prepared_widget );
 
 				if ( ! $save_widget ) {
 					return new WP_Error(
@@ -303,7 +298,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Check if a given request has access to get item.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
@@ -316,7 +311,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Get a specific widget.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
@@ -338,7 +333,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 				return $error;
 			}
 
-			$widget = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key );
+			$widget = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key, 'v2' );
 
 			if ( empty( $widget ) || ! isset( $widget->rscode ) || 200 !== $widget->rscode ) {
 				return $error;
@@ -362,7 +357,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return WP_Error|WP_REST_Response
 		 */
@@ -380,7 +375,8 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 			}
 
 			if ( function_exists( 'reviewshake_update_widget' ) ) {
-				$widget = reviewshake_update_widget( $data, $this->account_domain, $this->api_key );
+				$widget      = reviewshake_update_widget( $data, $this->account_domain, $this->api_key, 'v2' );
+				$widget_data = $widget->data;
 
 				// Validate errors.
 				if ( isset( $widget->rscode ) && 200 !== $widget->rscode ) {
@@ -393,22 +389,24 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					return new WP_Error( 'reviewshake_error_on_update_widget', $message, $args );
 				}
 
-				if ( isset( $widget->embed ) && ! empty( $widget->embed ) ) {
-					$embed = reviewshake_sanitize( 'embed', $result->embed );
-				} else {
-					$type  = strtolower( $data['widget_type'] );
-					$embed = reviewshake_sanitize( 'embed', "https://{$this->account_domain}/widgets/{$type}.js?org=1" );
+				if ( ! isset( $widget_data->id ) || ! isset( $widget_data->attributes->url ) || ! isset( $widget_data->attributes->snippet_html ) ) {
+					return new WP_Error(
+						'reviewshake_error_on_update_widget',
+						esc_html__( 'Update Widget', 'reviewshake-widgets' ),
+						array(
+							'status' => 400,
+							'detail' => esc_html__(
+								'Something went wrong! The widget ID and/or embed code is invalid.',
+								'reviewshake-widgets'
+							),
+						)
+					);
 				}
 
-				$widget->embed = $embed;
-				$data['embed'] = $embed;
+				// Prepared widget data to be saved into db.
+				$prepared_widget = $this->prepare_widget_for_database( $widget );
 
-				$prefix               = 'widget';
-				$key                  = (string) $prefix . $data['id'];
-				$widget_array         = array();
-				$widget_array[ $key ] = $data;
-
-				$save_widget = reviewshake_save_settings( 'widgets', $widget_array );
+				$save_widget = reviewshake_save_settings( 'widgets-v2', $prepared_widget );
 
 				if ( ! $save_widget ) {
 					new WP_Error(
@@ -437,7 +435,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return WP_Error|bool
 		 */
@@ -450,7 +448,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return WP_Error|WP_REST_Response
 		 */
@@ -459,7 +457,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 			$prefixed_id = (string) 'widget' . $widget_id;
 
-			if ( ! $widget_id || ! isset( $this->settings['widgets'] ) || ! isset( $this->settings['widgets'][ $prefixed_id ] ) ) {
+			if ( ! $widget_id || ! isset( $this->settings['widgets-v2'] ) || ! isset( $this->settings['widgets-v2'][ $prefixed_id ] ) ) {
 				return new WP_Error(
 					'reviewshake_rest_invalid_review_widget_id',
 					esc_html__( 'Delete Widget', 'reviewshake-widgets' ),
@@ -471,7 +469,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 			}
 
 			if ( function_exists( 'reviewshake_delete_widget' ) ) {
-				$result = reviewshake_delete_widget( (int) $widget_id, $this->account_domain, $this->api_key );
+				$result = reviewshake_delete_widget( (int) $widget_id, $this->account_domain, $this->api_key, 'v2' );
 
 				// Validate errors.
 				if ( isset( $result->rscode ) && 200 !== $result->rscode ) {
@@ -488,7 +486,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 					);
 				}
 
-				$deleted = reviewshake_remove_widget( (int) $widget_id );
+				$deleted = reviewshake_remove_widget( (int) $widget_id, 'v2' );
 
 				$response = new WP_REST_Response();
 
@@ -508,21 +506,28 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		 *
 		 * @param object $widgets The widgets.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return WP_Error|array $prepared_item
 		 */
 		protected function prepare_widgets_for_database( $widgets ) {
 			$prepared_item = array();
 
-			if ( isset( $widgets->status, $widgets->body ) && 200 === $widgets->status && ! empty( $widgets->body ) ) {
+			if ( isset( $widgets->rscode, $widgets->data ) && 200 === $widgets->rscode && ! empty( $widgets->data ) ) {
 				$prefix = 'widget';
 
-				foreach ( $widgets->body as $widget ) {
+				foreach ( $widgets->data as $widget ) {
 					$widget_id = (string) $prefix . $widget->id;
+
 					if ( is_object( $widget ) ) {
 						foreach ( $widget as $key => $value ) {
-							$prepared_item[ $widget_id ][ $key ] = reviewshake_sanitize( $key, $value );
+							if ( is_object( $value ) ) {
+								foreach ( $value as $key2 => $value2 ) {
+									$prepared_item[ $widget_id ][ $key2 ] = reviewshake_sanitize( $key2, $value2, 'v2' );
+								}
+							} else {
+								$prepared_item[ $widget_id ][ $key ] = reviewshake_sanitize( $key, $value, 'v2' );
+							}
 						}
 					}
 				}
@@ -542,56 +547,65 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 			$prepared_item = array();
 
 			$defaults = array(
-				'display_mode'            => 0,
+				'display_mode'            => 'summary',
 				'locale'                  => 'en',
-				'request_button'          => false,
-				'width'                   => 0,
-				'height'                  => 0,
-				'display_elements'        => array( 0, 1, 2, 3, 4 ),
-				'background_color'        => 'rgba(255,230,230,1)',
-				'review_background_color' => 'rgba(189,189,241,1)',
-				'text_color'              => 'rgba(65,117,5,1)',
-				'link_color'              => 'rgba(189,16,224,1)',
-				'button_color'            => 'rgba(0,0,0,100)',
-				'star_color'              => 'rgba(127,96,0,100)',
-				'title_font_size'         => '30',
-				'title_font_weight'       => 1,
-				'body_font_size'          => 18,
-				'styling'                 => 'simple',
+				'hide_empty_reviews'      => true,
+				'show_on_mobile'          => true,
+				'waiting_time'            => 1000,
+				'position'                => 'bottom_right',
+				'display_elements'        => array(
+					'name'   => true,
+					'image'  => true,
+					'date'   => true,
+					'rating' => true,
+					'text'   => true,
+					'quote'  => true,
+				),
+				'colors'                  => array(
+					'bg'        => '',
+					'review_bg' => '#FFFFFF',
+					'text'      => '#5B5F62',
+					'link'      => '#0095FF',
+				),
+				'fonts'                   => array(
+					'size'   => '14',
+					'weight' => 'normal',
+				),
 				'custom_css'              => '',
-				'ex_reviews_source'       => array(),
-				'ex_star_rating'          => array(),
-				'ex_empty_reviews'        => true,
-				'max_reviews'             => '5',
-				'summary_header'          => true,
-				'rich_snippet'            => false,
-				'rich_snippet_type'       => 'local_business',
-				'rich_snippet_meta_data'  => (object) array(),
+				'rich_snippet'            => true,
+				'excluded_review_sources' => array(),
 			);
 
 			$args = array(
-				'name'                    => $request->get_param( 'name' ),
-				'widget_type'             => $request->get_param( 'widget_type' ),
-				'display_mode'            => $request->get_param( 'display_mode' ),
-				'ex_star_rating'          => json_decode( $request->get_param( 'ex_star_rating' ) ),
-				'max_reviews'             => $request->get_param( 'max_reviews_per_display' ),
-				'locale'                  => $request->get_param( 'locale' ),
-				'background_color'        => $request->get_param( 'background_color' ),
-				'review_background_color' => $request->get_param( 'review_background_color' ),
-				'text_color'              => $request->get_param( 'text_color' ),
-				'link_color'              => $request->get_param( 'link_color' ),
-				'title_font_size'         => $request->get_param( 'title_font_size' ),
-				'title_font_weight'       => $request->get_param( 'title_font_weight' ),
+				'name'            => $request->get_param( 'name' ),
+				'widget_type'     => $request->get_param( 'widget_type' ),
+				'display_mode'    => $request->get_param( 'display_mode' ),
+				'min_star_rating' => $request->get_param( 'min_star_rating' ),
+				'locale'          => $request->get_param( 'locale' ),
+				'colors'          => array(
+					'bg'        => reviewshake_convert_rgb_to_hex( $request->get_param( 'background_color' ) ),
+					'review_bg' => reviewshake_convert_rgb_to_hex( $request->get_param( 'review_background_color' ) ),
+					'text'      => reviewshake_convert_rgb_to_hex( $request->get_param( 'text_color' ) ),
+					'link'      => reviewshake_convert_rgb_to_hex( $request->get_param( 'link_color' ) ),
+				),
+				'fonts'           => array(
+					'size'   => $request->get_param( 'title_font_size' ),
+					'weight' => $request->get_param( 'title_font_weight' ),
+				),
 			);
 
 			$parse_args = wp_parse_args( $args, $defaults );
 
-			if ( isset( $parse_args['display_mode'] ) && 1 == $parse_args['display_mode'] ) {
+			if ( isset( $parse_args['display_mode'] ) && 'review' === $parse_args['display_mode'] ) {
 				$parse_args['summary_header'] = false;
 			}
 
+			if ( ! $request->get_param( 'display_quote' ) ) {
+				$parse_args['display_elements']['quote'] = false;
+			}
+
 			foreach ( $parse_args as $key => $value ) {
-				$prepared_item[ $key ] = reviewshake_sanitize( $key, $value );
+				$prepared_item[ $key ] = reviewshake_sanitize( $key, $value, 'v2' );
 			}
 
 			if ( isset( $request['id'] ) && ! empty( $request['id'] ) ) {
@@ -630,12 +644,43 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		}
 
 		/**
+		 * Prepare the widget for create or update operation.
+		 *
+		 * @param object $widget The widget data.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @return WP_Error|array $prepared_item
+		 */
+		protected function prepare_widget_for_database( $widget ) {
+			$prepared_item = array();
+
+			if ( isset( $widget->rscode, $widget->data ) && 200 === $widget->rscode && ! empty( $widget->data ) ) {
+				$prefix    = 'widget';
+				$widget_id = (string) $prefix . $widget->data->id;
+
+				foreach ( $widget->data as $key => $value ) {
+					if ( is_object( $value ) ) {
+						foreach ( $value as $key2 => $value2 ) {
+							$prepared_item[ $widget_id ] [ $key2 ] = reviewshake_sanitize( $key2, $value2, 'v2' );
+						}
+					} else {
+						$prepared_item[ $widget_id ][ $key ] = reviewshake_sanitize( $key, $value, 'v2' );
+					}
+				}
+			}
+
+			// Return sanitized and prepared item.
+			return $prepared_item;
+		}
+
+		/**
 		 * Prepare the item for the REST response
 		 *
 		 * @param mixed           $result WordPress representation of the item.
 		 * @param WP_REST_Request $request Request object.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return mixed
 		 */
@@ -647,7 +692,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Get the query params for collections.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return array
 		 */
@@ -673,7 +718,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		/**
 		 * Retrieves the widgets's schema, conforming to JSON Schema.
 		 *
-		 * @since 1.0.0
+		 * @since 2.0.0
 		 *
 		 * @return array $schema
 		 */
@@ -709,7 +754,6 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 
 			return $schema;
 		}
-
 	}
 
 endif;

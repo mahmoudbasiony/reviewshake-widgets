@@ -127,7 +127,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		}
 
 		/**
-		 * Check if a given request has access to create items
+		 * Check if a given request has access to create items.
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 * @return WP_Error|bool
@@ -137,7 +137,7 @@ if ( class_exists( 'WP_REST_Controller' ) ) :
 		}
 
 		/**
-		 * Create one item from the collection
+		 * Create one item from the collection.
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 * @return WP_Error|WP_REST_Response

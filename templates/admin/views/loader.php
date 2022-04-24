@@ -2,7 +2,7 @@
 /**
  * Settings - Admin - Views.
  *
- * @package Reviewshake_Widgets/Templates/Admin/Vendor
+ * @package Reviewshake_Widgets/Templates/Admin/Views
  * @author Reviewshake
  */
 

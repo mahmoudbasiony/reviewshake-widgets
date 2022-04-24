@@ -171,6 +171,7 @@
 		e.preventDefault();
 
 		let widget = $(this).closest('.reviewshake-widgets-widget');
+		let version = $(this).closest('.widget-actions').attr('data-version');
 		let widgetID = widget.attr('data-widget-id');
 
 		if( confirm(reviewshake_widgets_params.translations.confirm_delete) ) {
@@ -178,7 +179,7 @@
 			showLoader('reviewshake-widgets-setup-wrap', widget);
 
 			// Delete widget.
-			deleteWidget(widgetID, widget);
+			deleteWidget(widgetID, widget, version);
 		}
 	} );
 
@@ -205,6 +206,22 @@
 		$(this).closest('.widget_min_star_rating').find('input[name="ex_star_rating"]').val(exStarRating);
 	});
 
+	/*
+	 * V2 widgets : On change minimun star rating input form.
+	 */
+	$(document).on('click', '.widget_v2_min_star_rating .star_rating', function(event){
+		$('.star_rating').removeClass('selected');
+
+		// Initialize the exStarRating array.
+		let exStarRating = [];
+
+		// Get the current clicked star rate.
+		let starRate = $(this).data('star-rate');
+
+		$(this).addClass('selected');
+		$(this).closest('.widget_v2_min_star_rating').find('input[name="min_star_rating"]').val(starRate);
+	});
+
 	/**
 	 * On submit create/update widget form.
 	 */
@@ -219,6 +236,7 @@
 
 		// Define errors
 		let errors = false;
+
 		// First remove all errors.
 		form.find('.error').remove();
 
@@ -264,6 +282,67 @@
 		}
 	} );
 
+
+	/**
+	 * V2 widgets: On submit create/update widget form.
+	 */
+	$(document).on( 'submit', '#create_widget_v2_form', function(e) {
+		e.preventDefault();
+
+		let form = $(this);
+
+		let widgetID = parseInt(form.attr('data-widget-id'));
+		let name = form.find('input[name="name"]').val();
+		let type = form.find('select[name="widget_type"] option:selected').val();
+
+		// Define errors
+		let errors = false;
+
+		// First remove all errors.
+		form.find('.error').remove();
+
+		// Widget name is a required field.
+		if(name.length <= 0){
+			form.find('input[name="name"]').after('<span class="error">'+reviewshake_widgets_params.translations.required+'</span');
+			errors = true;
+		}
+
+		// Widget type is a required field.
+		if(type.length <= 0){
+			form.find('select[name="widget_type"]').after('<span class="error">'+reviewshake_widgets_params.translations.required+'</span');
+			errors = true;
+		}
+
+		/*
+		 * Validation errors.
+		 */
+		if(errors) {
+			$("html, body").animate({ scrollTop: $('.error').first().offset().top - 70 }, 800);
+			return false;
+		}
+
+		let formData = new FormData(form[0]);
+
+		const plainFormData = Object.fromEntries(formData.entries());
+
+		console.log(plainFormData);
+
+		if( !!widgetID ) {
+			widgetID = parseInt(widgetID);
+			plainFormData['id'] = widgetID;
+
+			/**
+			 * Update widget.
+			 */
+			updateWidgetV2(form, plainFormData);
+		} else {
+			/**
+			 * Create new widget
+			 */
+			createWidgetV2(form, plainFormData);
+		}
+	} );
+
 	/*
 	 * On click Add/Edit widget
 	 */
@@ -293,7 +372,7 @@
 	})
 
 	/*
-	 * On submit connect account form
+	 * On submit connect account form.
 	 */
 	$(document).on('submit', '#connect_account_form', function(event) {
 		event.preventDefault();
@@ -354,6 +433,28 @@
 
 		let href = $(this).data('href');
 		window.open( href, '_blank' );
+	});
+
+	/*
+	 * On change widget version.
+	 */
+	$(document).on('change', '.widgets-version-wrap input[name="reviewshake_widgets_widgets_version"]', function(e) {
+		let widgetsVersion = $(this).val();
+
+		let data = {
+			'action' : 'reviewshake_save_widgets_version',
+			'nonce' : reviewshake_widgets_params.nonce,
+			'version' : widgetsVersion,
+		};
+
+		saveWidgetsVersion(data).then( result => {
+			if(result.success) {
+				$('.widgets-version-wrap .version-loader').hide();
+				$('.widgets-version-wrap input[name="reviewshake_widgets_widgets_version"]').removeAttr('disabled');;
+				console.log(result);
+			}
+		} );
+
 	});
 
 	$(document).ready(function () {
@@ -634,16 +735,133 @@
 	};
 
 	/**
+	 * V2 widgets: create a new widget.
+	 *
+	 * @param {element} form     The form element
+	 * @param {object}  formData The form data object
+	 *
+	 * @return void
+	 */
+	const createWidgetV2 = async(form, formData) => {
+		// Show preview loader.
+		showPreviewLoader();
+
+		// Send the create widget request to rest API.
+		const createWidgetResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v2/widgets', {
+			method: 'POST',
+			headers : {
+				'content-type': 'application/json',
+				'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
+			},
+			body: JSON.stringify(formData),
+		} );
+
+		// Get the create widget response json.
+		const responseJson = await createWidgetResponse.json();
+
+		console.log(responseJson);
+
+		let snippetHtml = '';
+		if (responseJson.hasOwnProperty('rscode') && 200 == responseJson.rscode) {
+			let widgetID = responseJson.data.id;
+			let widgetType = responseJson.data.attributes.widget_type;
+
+			// Add the widget ID data attribute.
+			form.attr('data-widget-id', widgetID);
+
+			snippetHtml = responseJson.data.attributes.snippet_html;
+
+			/*
+			 * Validates switching between widget types.
+			 */
+			if ('floating' === widgetType) {
+				$('#widget_type option:eq(1), #widget_type option:eq(2), #widget_type option:eq(3)').remove();
+			} else {
+				$('#widget_type option:eq(0)').remove();
+			}
+
+			// Append the preview widget asynchronously.
+			postscribe( '#widget_live_preview', snippetHtml, {
+				done: function() {
+					console.log( 'done' );
+
+					// Hide preview loader
+					hidePreviewLoader();
+				}
+			} );
+		}
+
+		if (!createWidgetResponse.ok && responseJson.hasOwnProperty('message') && responseJson.hasOwnProperty('data')) {
+			let message = responseJson.message;
+			let detail  = responseJson.data.detail;
+
+			showPopup(message, detail, true, 'error');
+		}
+	};
+
+	/**
+	 * V2 widgets: update the widget.
+	 *
+	 * @param {element} form     The form element
+	 * @param {object}  formData The form data object
+	 *
+	 * @return void
+	 */
+	const updateWidgetV2 = async (form, formData) => {
+		// Show preview loader.
+		showPreviewLoader();
+
+		const widgetID = formData.id;
+
+		// Send the update widget request to rest API.
+		const updateWidgetResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v2/widgets/'+widgetID, {
+			method: 'PUT',
+			headers: {
+				'content-type' : 'application/json',
+				'X-WP-Nonce' : reviewshake_widgets_params.wp_rest_nonce,
+			},
+			body: JSON.stringify(formData),
+		} );
+
+		// Get the update widget response json.
+		const responseJson = await updateWidgetResponse.json();
+
+		console.log(responseJson);
+
+		let snippetHtml = '';
+		if (responseJson.hasOwnProperty('rscode') && 200 === responseJson.rscode) {
+			snippetHtml = responseJson.data.attributes.snippet_html;
+
+			// Append the preview widget asynchronously.
+			postscribe('#widget_live_preview', snippetHtml, {
+				done: function() {
+					console.log( 'done' );
+
+					// Hide preview loader
+					hidePreviewLoader();
+				}
+			});
+		}
+
+		if (!updateWidgetResponse.ok && responseJson.hasOwnProperty('message') && responseJson.hasOwnProperty('message')) {
+			let message = responseJson.message;
+			let detail = responseJson.data.detail;
+			showPopup( message, detail, true, 'error' );
+		}
+	};
+
+	/**
 	 * Delete Reviewshake widget
 	 *
 	 * @param {int}     widgetID The target widget ID.
 	 * @param {element} widget   The widget element.
+	 * @param {string}  version  The widgets version. Default: v1.
 	 *
 	 * @return void
 	 */
-	const deleteWidget = async(widgetID, widget) => {
+	const deleteWidget = async(widgetID, widget, version = 'v1') => {
 		// Send the delete widget request to rest API
-		const deleteWidgetResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/widgets/'+widgetID, {
+		const deleteWidgetResponse = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/'+version+'/widgets/'+widgetID, {
 			method : 'DELETE',
 			headers : {
 				'content-type': 'application/json',
@@ -745,6 +963,7 @@
 	const createAccount = async(source, sourceUrl, googlePlaceId, form, isAccountExists, secToSleep = 20) => {
 		let sourcesCount = parseInt( form.attr('data-sources-count') );
 		let pricingPlan  = form.attr('data-pricing-plan');
+		let widgetsVersion = reviewshake_widgets_params.widgetsVersion;
 
 		// If is first review source.
 		if (sourcesCount === 0 && '' == isAccountExists) {
@@ -830,7 +1049,7 @@
 
 					console.log('after trial api');
 
-					const listWidgetsJson = await listWidgets();
+					const listWidgetsJson = await listWidgets(widgetsVersion);
 
 					if (listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode) {
 						let count = listWidgetsJson.hasOwnProperty('count') ? parseInt(listWidgetsJson.count) : 0;
@@ -871,7 +1090,7 @@
 			/**
 			 * List the available widgets for the account.
 			 */
-			const listWidgetsJson = await listWidgets();
+			const listWidgetsJson = await listWidgets(widgetsVersion);
 
 			if (listWidgetsJson.hasOwnProperty('rscode') && 200 === listWidgetsJson.rscode) {
 				let body = {
@@ -962,11 +1181,16 @@
 	/**
 	 * List all widgets for the current reviewshaka account.
 	 *
+	 * @param {string} widgetsVersion The widgets version. Default: v2.
+	 *
+	 * @since   1.0.0
+	 * @version 2.0.0
+	 *
 	 * @return {JSON} listWidgetsJson.
 	 */
-	const listWidgets = async() => {
+	const listWidgets = async(widgetsVersion = 'v2') => {
 		// Send the listing widgets request to rest API
-		const listWidgets = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/v1/widgets/', {
+		const listWidgets = await fetch(reviewshake_widgets_params.site_url+'/wp-json/reviewshake/'+widgetsVersion+'/widgets/', {
 			method: 'GET',
 			headers: {
 				'content-type': 'application/json',
@@ -978,6 +1202,32 @@
 		const listWidgetsJson = await listWidgets.json();
 
 		return listWidgetsJson;
+	};
+
+	/**
+	 * Save the choosen widgets version to database.
+	 *
+	 * @param {object} data The object data to send to ajax
+	 *
+	 * @return {object|WP_Error}
+	 */
+	const saveWidgetsVersion = async(data) => {
+		let result;
+		try {
+			result = await $.ajax({
+				url: reviewshake_widgets_params.ajax_url,
+				type: 'POST',
+				data: data,
+				beforeSend: function() {
+					$('.widgets-version-wrap .version-loader').show();
+					$('.widgets-version-wrap input[name="reviewshake_widgets_widgets_version"]').attr('disabled', true);
+				}
+			});
+
+			return result;
+		} catch (error) {
+			console.error(error);
+		}
 	};
 
 	/**

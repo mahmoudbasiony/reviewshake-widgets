@@ -24,4 +24,5 @@ if ( defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	 * Delete plugin options.
 	 */
 	delete_option( 'reviewshake_widgets_settings' );
+	delete_option( 'reviewshake_widgets_db_version' );
 }

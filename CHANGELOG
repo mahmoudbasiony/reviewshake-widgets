@@ -1,7 +1,10 @@
 == Changelog ==
 
+= 2.0.0 = 22 April 2020
+* Feature: introduce v2 widgets.
+
 = 1.1.0 = 08 Dec 2021
 * Feature: add autocomplete google places list to google review source.
 
-= 1.0.0 - 2021-07-20 =
+= 1.0.0 - 20 July 2021 =
 * Initial release.

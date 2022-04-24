@@ -17,7 +17,8 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Assets' ) ) :
 	 *
 	 * Handles back-end styles and scripts.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 2.0.0
 	 */
 	class Reviewshake_Widgets_Admin_Assets {
 		/**
@@ -36,7 +37,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Assets' ) ) :
 		 * Enqueues admin scripts.
 		 *
 		 * @since   1.0.0
-		 * @version 1.1.0
+		 * @version 2.0.0
 		 *
 		 * @return void
 		 */
@@ -93,6 +94,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Assets' ) ) :
 					'wp_rest_nonce'  => wp_create_nonce( 'wp_rest' ),
 					'newAccountForm' => reviewshake_render_connect_account_form(),
 					'state'          => reviewshake_get_state(),
+					'widgetsVersion' => reviewshake_get_widgets_version(),
 					'closeButton'    => esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/close-button.svg' ),
 					'successIcon'    => esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/success-icon.svg' ),
 					'errorIcon'      => esc_url( REVIEWSHAKE_WIDGETS_ROOT_URL . 'assets/dist/images/error-icon.svg' ),

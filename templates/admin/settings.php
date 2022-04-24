@@ -27,6 +27,8 @@ if ( 'setup' === $plugin_tab ) {
 	 */
 	reviewshake_rest_list_review_sources();
 
+	$test = reviewshake_get_list_of_review_sources( 'localhost170.reviewshake.com', '86fe02935487491aa3c5981d3d5962a04763d46e0026608e' );
+
 	/*
 	* Fetch widgets from api and save to db.
 	*/

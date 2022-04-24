@@ -17,7 +17,8 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 	 *
 	 * Calls admin Ajax.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 2.0.0
 	 */
 	class Reviewshake_Widgets_Admin_Ajax {
 		/**
@@ -31,6 +32,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 			add_action( 'wp_ajax_reviewshake_renders_widget_form', array( $this, 'renders_widget_form' ) );
 			add_action( 'wp_ajax_reviewshake_renders_review_source_form', array( $this, 'renders_review_source_form' ) );
 			add_action( 'wp_ajax_reviewshake_google_places_predictions', array( $this, 'google_places_predictions' ) );
+			add_action( 'wp_ajax_reviewshake_save_widgets_version', array( $this, 'save_widgets_version' ) );
 		}
 
 		/**
@@ -162,7 +164,7 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 
 					// Adds powered by google logo.
 					if ( isset( $response_body->predictions ) && ! empty( $response_body->predictions ) && ! empty( $predictions ) ) {
-						$powered_by_google = new stdClass();
+						$powered_by_google            = new stdClass();
 						$powered_by_google->id        = 'reviewshake_powered_by_google';
 						$powered_by_google->text      = '';
 						$powered_by_google->disabled  = true;
@@ -174,6 +176,30 @@ if ( ! class_exists( 'Reviewshake_Widgets_Admin_Ajax' ) ) :
 
 				wp_send_json_success( $predictions );
 			}
+			die();
+		}
+
+		/**
+		 * Save the choosen widgets version to the database.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @return void
+		 */
+		public function save_widgets_version() {
+			// Check for nonce security.
+			if ( ! wp_verify_nonce( $_POST['nonce'], 'reviewshake-nonce' ) ) {
+				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'reviewshake-widgets' ) );
+			}
+
+			if ( isset( $_POST ) && isset( $_POST['action'] ) && 'reviewshake_save_widgets_version' === $_POST['action'] ) {
+				$widgets_version = isset( $_POST['version'] ) ? sanitize_text_field( $_POST['version'] ) : 'v2';
+
+				if ( reviewshake_save_settings( 'widgets_version', $widgets_version ) ) {
+					wp_send_json_success();
+				}
+			}
+
 			die();
 		}
 	}

@@ -5,7 +5,7 @@
  * @var string $source_id     The review source prefixed ID string
  * @var array  $review_source The review source data
  *
- * @package Reviewshake_Widgets/Templates/Admin/Vendor
+ * @package Reviewshake_Widgets/Templates/Admin/Views
  * @author Reviewshake
  */
 

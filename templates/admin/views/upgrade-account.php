@@ -4,7 +4,7 @@
  *
  * @var object $current_plan The account current plan object.
  *
- * @package Reviewshake_Widgets/Templates/Admin/Vendor
+ * @package Reviewshake_Widgets/Templates/Admin/Views
  * @author Reviewshake
  */
 

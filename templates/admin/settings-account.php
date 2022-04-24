@@ -21,6 +21,10 @@ $current_plan = reviewshake_get_current_pricing_plan();
 
 // Is account claimed.
 $is_account_claimed = reviewshake_is_account_claimed( $current_plan );
+
+// Get widgets version from db.
+$widgets_version = reviewshake_get_widgets_version( $settings );
+
 ?>
 
 <div class="reviewshake-widgets-account section" id="reviewshake-widgets-account">
@@ -28,7 +32,7 @@ $is_account_claimed = reviewshake_is_account_claimed( $current_plan );
 
 	<div class="reviewshake-widgets-account-wrap">
 		<?php
-			/*
+			/**
 			 * Validates different account statuses.
 			 */
 		if ( $is_account_exists && $is_account_claimed ) {
@@ -38,6 +42,11 @@ $is_account_claimed = reviewshake_is_account_claimed( $current_plan );
 		} else {
 			include 'views/connect-account-form.php';
 		}
+
+			/**
+			 * Widgets version.
+			 */
+			require 'views/widgets-version.php';
 		?>
 	</div>
 </div>

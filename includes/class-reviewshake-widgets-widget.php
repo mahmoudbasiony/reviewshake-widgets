@@ -17,7 +17,8 @@ if ( class_exists( 'WP_Widget' ) ) {
 	 *
 	 * Extends WP_Widget class.
 	 *
-	 * @since 1.0.0
+	 * @since   1.0.0
+	 * @version 2.0.0
 	 */
 	class Reviewshake_Widgets_Widget extends WP_Widget {
 
@@ -54,16 +55,19 @@ if ( class_exists( 'WP_Widget' ) ) {
 		 */
 		public function __construct() {
 			$args = array(
-				'classname'   => 'reviewshake_widgets_widget',
-				'description' => __( 'Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites', 'reviewshake-widgets' ),
+				'classname'                   => 'reviewshake_widgets_widget',
+				'description'                 => __( 'Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites', 'reviewshake-widgets' ),
+				'customize_selective_refresh' => true,
+				'show_instance_in_rest'       => true,
 			);
 
 			parent::__construct( 'reviewshake_widgets_widget', __( 'Reviewshake - Reviews Widget.', 'reviewshake-widgets' ), $args );
 			$settings = get_option( 'reviewshake_widgets_settings', array() );
 
-			$this->widgets        = reviewshake_rest_list_widgets();
-			$this->account_domain = reviewshake_sanitize( 'account_domain', reviewshake_check_settings( $settings, 'account', 'account_domain' ) );
-			$this->api_key        = reviewshake_sanitize( 'api_key', reviewshake_check_settings( $settings, 'account', 'api_key' ) );
+			$this->widgets         = reviewshake_rest_list_widgets();
+			$this->account_domain  = reviewshake_sanitize( 'account_domain', reviewshake_check_settings( $settings, 'account', 'account_domain' ) );
+			$this->api_key         = reviewshake_sanitize( 'api_key', reviewshake_check_settings( $settings, 'account', 'api_key' ) );
+			$this->widgets_version = reviewshake_get_widgets_version( $settings );
 		}
 
 		/**
@@ -72,56 +76,70 @@ if ( class_exists( 'WP_Widget' ) ) {
 		 * @param array  $args     The widget args.
 		 * @param string $instance The widget instance.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 2.0.0
 		 *
 		 * @return void
 		 */
 		public function widget( $args, $instance ) {
-			$widget_id = ! empty( $instance['widget_id'] ) ? absint( $instance['widget_id'] ) : '';
+			$widget_id = ! empty( $instance['widget_id'] ) ? absint( $instance['widget_id'] ) : $this->id;
 			$not_found = true;
 
 			echo wp_kses_post( $args['before_widget'] );
 
 			if ( $widget_id ) {
-				// Get the widget by ID to validate it's existence.
-				$widget     = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key );
-				$embed      = '';
-				$updated_at = 1;
-				if ( $widget && isset( $widget->body ) && ! empty( $widget->body ) ) {
-					$not_found = false;
 
-					// Get the embed code.
-					if ( isset( $widget->body->embed ) && ! empty( $widget->body->embed ) ) {
-						$embed = $widget->body->embed;
-					} elseif ( isset( $widget->body->widget_type ) ) {
-						$widget_type     = esc_attr( strtolower( $widget->body->widget_type ) );
-						$organization_id = isset( $widget->body->organization_id ) ? (int) $widget->body->organization_id : '';
+				if ( 'v2' === $this->widgets_version ) {
+					// Get the widget by ID to validate it's existence.
+					$widget = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key, 'v2' );
 
-						$embed = "https://{$this->account_domain}/widgets/{$widget_type}.js?org={$organization_id}";
+					if ( $widget && isset( $widget->data ) && isset( $widget->data->attributes ) ) {
+						$not_found = false;
+
+						$snippet_html = isset( $widget->data->attributes->snippet_html ) ? $widget->data->attributes->snippet_html : '';
+
+						echo html_entity_decode( esc_html( $snippet_html ) );
+					}
+				} else {
+					// Get the widget by ID to validate it's existence.
+					$widget     = reviewshake_get_widget( (int) $widget_id, $this->account_domain, $this->api_key );
+					$embed      = '';
+					$updated_at = 1;
+					if ( $widget && isset( $widget->body ) && ! empty( $widget->body ) ) {
+						$not_found = false;
+
+						// Get the embed code.
+						if ( isset( $widget->body->embed ) && ! empty( $widget->body->embed ) ) {
+							$embed = $widget->body->embed;
+						} elseif ( isset( $widget->body->widget_type ) ) {
+							$widget_type     = esc_attr( strtolower( $widget->body->widget_type ) );
+							$organization_id = isset( $widget->body->organization_id ) ? (int) $widget->body->organization_id : '';
+
+							$embed = "https://{$this->account_domain}/widgets/{$widget_type}.js?org={$organization_id}";
+						}
+
+						// Get the updated at timestamp to use a version.
+						if ( isset( $widget->body->updated_at ) ) {
+							$updated_at = strtotime( sanitize_text_field( $widget->body->updated_at ) );
+						}
 					}
 
-					// Get the updated at timestamp to use a version.
-					if ( isset( $widget->body->updated_at ) ) {
-						$updated_at = strtotime( sanitize_text_field( $widget->body->updated_at ) );
+					if ( $embed ) {
+						$embed .= "?v={$updated_at}";
+
+						// Check it current WordPress version is greater or equal to 5.7.
+						if ( reviewshake_check_wordpress_version( '5.7', '>=' ) ) {
+							wp_print_script_tag(
+								array(
+									'type' => 'text/javascript',
+									'src'  => esc_url( $embed ),
+								)
+							);
+						} else {
+							echo '<script src="' . esc_url( $embed ) . '"></script>';
+						}
 					}
 				}
-
-				if ( $embed ) {
-					$embed .= "?v={$updated_at}";
-					echo '<script src="' . esc_url( $embed ) . '"></script>';
-				}
-			}
-
-			/*
-			 * Show a message if not available widget for admin users only.
-			 */
-			if ( current_user_can( 'manage_options' ) && $not_found ) {
-				$widgets_url = admin_url( 'widgets.php' );
-				$setup_url   = admin_url( 'admin.php?page=reviewshake-widgets&tab=setup' );
-
-				/* translators: 1) string URL to setup displayed widget 2) string URL to create a new widget. */
-				echo wp_kses_post( '<p>' . sprintf( __( 'Widget is not found. Go to <a href="%1$s">Widgets</a> to select a Reviewshake widget, or go to <a href="%2$s">Setup</a> to create a new one.', 'reviewshake-widgets' ), esc_url( $widgets_url ), esc_url( $setup_url ) ) . '</p>' );
-
 			}
 
 			echo wp_kses_post( $args['after_widget'] );
@@ -150,20 +168,27 @@ if ( class_exists( 'WP_Widget' ) ) {
 		 *
 		 * @param  array $instance widget instance.
 		 *
-		 * @since 1.0.0
+		 * @since   1.0.0
+		 * @version 2.0.0
 		 *
 		 * @return mixed
 		 */
 		public function form( $instance ) {
 			$widget_id = isset( $instance['widget_id'] ) ? esc_attr( $instance['widget_id'] ) : '';
 
-			if ( ! empty( $this->widgets ) && is_object( $this->widgets ) && isset( $this->widgets->body ) && ! empty( $this->widgets->body ) ) : ?>
+			if ( 'v2' === $this->widgets_version ) {
+				$widgets_data = $this->widgets->data;
+			} else {
+				$widgets_data = $this->widgets->body;
+			}
+
+			if ( ! empty( $this->widgets ) && is_object( $this->widgets ) && isset( $widgets_data ) && ! empty( $widgets_data ) ) : ?>
 				<p>
 					<label for="<?php echo esc_attr( $this->get_field_id( 'widget_id' ) ); ?>"><?php esc_html_e( 'Choose a widget from the list', 'reviewshake-widgets' ); ?></label>
 					<select name="<?php echo esc_attr( $this->get_field_name( 'widget_id' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'widget_id' ) ); ?>" class="widefat">
 						<option value="0"><?php esc_html_e( '&mdash; Select &mdash;', 'reviewshake-widgets' ); ?></option>
-						<?php foreach ( $this->widgets->body as $widget_obj ) : ?>
-							<option value="<?php echo esc_attr( $widget_obj->id ); ?>"<?php selected( $widget_id, esc_attr( $widget_obj->id ) ); ?>><?php echo esc_attr( $widget_obj->name ); ?></option>
+						<?php foreach ( $widgets_data as $widget_obj ) : ?>
+							<option value="<?php echo esc_attr( $widget_obj->id ); ?>"<?php selected( $widget_id, esc_attr( $widget_obj->id ) ); ?>><?php echo esc_html( ( 'v2' === $this->widgets_version && isset( $widget_obj->attributes, $widget_obj->attributes->name ) ) ? $widget_obj->attributes->name : $widget_obj->name ); ?></option>
 						<?php endforeach; ?>
 					</select>
 				</p>

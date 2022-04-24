@@ -234,6 +234,9 @@ You can get in touch with us at support@reviewshake.com, or via the live chat fr
 
 == Changelog ==
 
+= 2.0.0 = 22 April 2020
+* Introduce v2 widgets.
+
 = 1.1.0 = 8 Dec 2021
 * Google Reviews are now much easier to obtain: you just choose the Google Place from an autocomplete list - no API keys or place IDs required, and you get instant results.
 

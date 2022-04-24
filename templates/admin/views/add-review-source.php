@@ -4,7 +4,7 @@
  *
  * @var array $review_sources The available review sources list
  *
- * @package Reviewshake_Widgets/Templates/Admin/Vendor
+ * @package Reviewshake_Widgets/Templates/Admin/Views
  * @author Reviewshake
  */
 

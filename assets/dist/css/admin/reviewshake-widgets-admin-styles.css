@@ -218,50 +218,81 @@
       background-color: #c52124 !important;
       border-color: #c52124 !important; }
 
-#reviewshake-widgets .reviewshake-widgets-account .claim-account-wrap .message {
-  font-size: 1.2em;
-  line-height: 1.5; }
-
-#reviewshake-widgets .reviewshake-widgets-account .claim-account-wrap .claim-account-link {
-  margin-bottom: 25px; }
-  #reviewshake-widgets .reviewshake-widgets-account .claim-account-wrap .claim-account-link .button {
-    font-size: 16px; }
-
-#reviewshake-widgets .reviewshake-widgets-account .reviewshake-account-connect-wrap {
-  margin-top: 15px; }
-  #reviewshake-widgets .reviewshake-widgets-account .reviewshake-account-connect-wrap .connect-notice {
-    font-size: 16px; }
-
-#reviewshake-widgets .reviewshake-widgets-account .account-details-wrap {
-  font-size: 16px; }
-  #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .connected-notice {
-    font-size: 16px; }
-  #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .subdomain-info {
-    margin: 20px 0 10px; }
-    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .subdomain-info .header {
-      padding-right: 95px; }
-    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .subdomain-info .subdomain-data {
-      font-weight: 600; }
-  #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan {
-    margin: 15px 0; }
-    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan .header {
-      padding-right: 145px; }
-    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan .current-plan-data {
-      font-weight: 600; }
-      #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan .current-plan-data .upgrade {
-        padding-left: 20px; }
-
-#reviewshake-widgets .reviewshake-widgets-account .account-links-wrap {
-  margin: 50px 0;
-  text-align: center; }
-  #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .claiming {
-    font-size: 18px; }
-  #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .setup-review-sources-widgets {
-    padding: 20px 0 35px 0; }
-    #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .setup-review-sources-widgets .button {
+#reviewshake-widgets .reviewshake-widgets-account {
+  min-height: 370px; }
+  #reviewshake-widgets .reviewshake-widgets-account .claim-account-wrap .message {
+    font-size: 1.2em;
+    line-height: 1.5; }
+  #reviewshake-widgets .reviewshake-widgets-account .claim-account-wrap .claim-account-link {
+    margin-bottom: 25px; }
+    #reviewshake-widgets .reviewshake-widgets-account .claim-account-wrap .claim-account-link .button {
       font-size: 16px; }
-  #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .connect-another-account {
-    font-size: 15px; }
+  #reviewshake-widgets .reviewshake-widgets-account .reviewshake-account-connect-wrap {
+    margin-top: 15px; }
+    #reviewshake-widgets .reviewshake-widgets-account .reviewshake-account-connect-wrap .connect-notice {
+      font-size: 16px; }
+  #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap {
+    font-size: 16px; }
+    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .connected-notice {
+      font-size: 16px; }
+    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .subdomain-info {
+      margin: 20px 0 10px; }
+      #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .subdomain-info .header {
+        padding-right: 95px; }
+      #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .subdomain-info .subdomain-data {
+        font-weight: 600; }
+    #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan {
+      margin: 15px 0; }
+      #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan .header {
+        padding-right: 145px; }
+      #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan .current-plan-data {
+        font-weight: 600; }
+        #reviewshake-widgets .reviewshake-widgets-account .account-details-wrap .current-plan .current-plan-data .upgrade {
+          padding-left: 20px; }
+  #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap {
+    margin: 50px 0;
+    text-align: center; }
+    #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .claiming {
+      font-size: 18px; }
+    #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .setup-review-sources-widgets {
+      padding: 20px 0 35px 0; }
+      #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .setup-review-sources-widgets .button {
+        font-size: 16px; }
+    #reviewshake-widgets .reviewshake-widgets-account .account-links-wrap .connect-another-account {
+      font-size: 15px; }
+  #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .widgets-version__title {
+    font-size: 1.2em;
+    line-height: 1.5; }
+  #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .radio-group {
+    position: relative;
+    width: 150px; }
+    #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .radio-group .version-loader {
+      display: none;
+      width: 20px;
+      position: absolute;
+      top: 10px; }
+  #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .widgets-version-label__container {
+    display: block;
+    width: 100px;
+    margin-bottom: 10px; }
+  #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .tooltip {
+    position: relative;
+    display: inline-block; }
+    #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .tooltip .tooltiptext {
+      visibility: hidden;
+      width: max-content;
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px 10px;
+      /* Position the tooltip */
+      position: absolute;
+      top: 25px;
+      left: 20px;
+      z-index: 1; }
+  #reviewshake-widgets .reviewshake-widgets-account .widgets-version-wrap .tooltip:hover .tooltiptext {
+    visibility: visible; }
 
 .reviewshake-popup-wrap {
   background: rgba(0, 0, 0, 0.3);
