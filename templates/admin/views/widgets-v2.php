@@ -43,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 				</div>
 				<div class="widget-preview">
-					<?php echo html_entity_decode( esc_htnl( $snippet_html ) ); ?>
+					<?php echo html_entity_decode( esc_html( $snippet_html ) ); ?>
 				</div>
 			</div>
 		<?php endforeach; ?>
