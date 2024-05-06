@@ -2,51 +2,56 @@
 /**
  * Settings.
  *
- * @package Reviewshake_Widgets/Templates/Admin
+ * @package WPBLC_Broken_Links_Checker/Templates/Admin
  * @author  Reviewshake
  */
+
+
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
 // Available tabs.
-$plugin_tabs = array( 'setup', 'account' );
+$plugin_tabs = array( 'general', 'scan' );
 
 // Current tab.
-$plugin_tab = isset( $_GET['tab'] ) && in_array( $_GET['tab'], $plugin_tabs, true ) ? sanitize_text_field( $_GET['tab'] ) : 'setup';
+$plugin_tab = isset( $_GET['tab'] ) && in_array( $_GET['tab'], $plugin_tabs, true ) ? sanitize_text_field( $_GET['tab'] ) : 'general';
 
-/**
- * Get the current account info.
- */
-reviewshake_rest_get_account_info();
 
-if ( 'setup' === $plugin_tab ) {
-	/**
-	 * Fetch review sources from api and save them to db.
-	 */
-	reviewshake_rest_list_review_sources();
+if ( 'general' === $plugin_tab ) {
 
-	$test = reviewshake_get_list_of_review_sources( 'localhost170.reviewshake.com', '86fe02935487491aa3c5981d3d5962a04763d46e0026608e' );
-
-	/*
-	* Fetch widgets from api and save to db.
-	*/
-	reviewshake_rest_list_widgets();
 }
 
+//$response = wp_remote_retrieve_body( wp_remote_post( 'https://www.youtube.com/watch?app=desktop&v=LZkuYsFcLy8&t=0s' ) );
+
+//var_dump(strpos( $response, 'Video unavailable' ) !== false || strpos( $response, 'Something went wrong' ) !== false);
+//var_dump(is_wp_error( wp_remote_head( 'https://www.youtube.com/watch?app=desktop&v=LZkuYsFcLy8&t=0s' )) );
+//var_dump( wp_remote_retrieve_body( wp_remote_post( 'https://www.youtube.com/watch?app=desktop&v=LZkuYsFcLy8&t=0s' ) ) );
+//var_dump(is_wp_error( wp_safe_remote_get('https://www.youtube.com/watch?app=desktop&v=LZkuYsFcLy8&t=0s')));
+//var_dump($response);
+//var_dump(WPBLC_Broken_Links_Checker_Utilities::getLinksFromPages( array( 'page', 'post' ) ));
+
+//var_dump(WPBLC_Broken_Links_Checker_Utilities::get_response_code( wp_remote_head( 'https://www.youtube.com/watch?app=desktop&v=LZkuYsFcLy8&t=0s')));
+//var_dump(wp_remote_head( 'https://youtubesfs.com' ));
+
+//var_dump(WPBLC_Broken_Links_Checker_Utilities::get_content_to_scan( array( 'page', 'post' ) ));
+
+// $options = get_option( 'wpblc_broken_links_checker_links', array() );
+// echo '<pre>';
+// var_dump($options);
+// echo '</pre>';
 ?>
 
-<div class="wrap reviewshake-widgets" id="reviewshake-widgets">
-	<nav class="nav-tab-wrapper reviewshake-nav-tab-wrapper">
-		<a href="admin.php?page=reviewshake-widgets&tab=setup" class="nav-tab <?php echo 'setup' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Setup', 'reviewshake-widgets' ); ?></a>
-		<a href="admin.php?page=reviewshake-widgets&tab=account" class="nav-tab <?php echo 'account' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Reviewshake Account', 'reviewshake-widgets' ); ?></a>
+<div class="wrap wpblc-broken-links-checker" id="wpblc-broken-links-checker">
+	<nav class="nav-tab-wrapper wpblc-nav-tab-wrapper">
+		<a href="admin.php?page=wpblc-broken-links-checker&tab=general" class="nav-tab <?php echo 'general' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Settings', 'wpblc-broken-links-checker' ); ?></a>
+		<a href="admin.php?page=wpblc-broken-links-checker&tab=scan" class="nav-tab <?php echo 'scan' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Scan', 'wpblc-broken-links-checker' ); ?></a>
 	</nav>
 
 	<div class="postbox<?php echo 'account' === $plugin_tab ? ' not-full-width' : ''; ?>">
-		<div class="inside tab tab-content <?php echo esc_attr( $plugin_tab ); ?>" id="reviewshake-tab-<?php echo esc_attr( $plugin_tab ); ?>">
+		<div class="inside tab tab-content <?php echo esc_attr( $plugin_tab ); ?>" id="wpblc-tab-<?php echo esc_attr( $plugin_tab ); ?>">
 			<?php require_once 'settings-' . $plugin_tab . '.php'; ?>
-			<?php require_once 'views/loader.php'; ?>
 		</div>
 	</div>
 </div>

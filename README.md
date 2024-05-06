@@ -1,6 +1,6 @@
-# Reviewshake Widgets
+# WP Broken Links Checker
 
-Add customizable widgets to showcase reviews from Google, Facebook, Yelp and 80+ other websites.
+.
 
 
 Installation
@@ -8,14 +8,14 @@ Installation
 
 ### Requirements
 
-`reviewshake-widgets` requires the following dependencies:
+`wpblc-broken-links-checker` requires the following dependencies:
 
 - [Node.js](https://nodejs.org/)
 - [Composer](https://getcomposer.org/)
 
 ### Setup
 
-To start using all the tools that come with `reviewshake-widgets`  you need to install the necessary Node.js and Composer dependencies :
+To start using all the tools that come with `wpblc-broken-links-checker`  you need to install the necessary Node.js and Composer dependencies :
 
 ```sh
 $ composer install

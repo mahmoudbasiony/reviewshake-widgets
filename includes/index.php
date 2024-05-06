@@ -2,7 +2,7 @@
 /**
  * Silence is golden.
  *
- * @package Reviewshake_widgets
+ * @package
  */
 
 echo null;

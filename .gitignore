@@ -1,8 +1,8 @@
 /node_modules
 /vendor
 
-languages/reviewshake-widgets.pot
+languages/wpblc-broken-links-checker.pot
 package-lock.json
 composer.lock
 .DS_Store
-reviewshake-widgets.zip
+wpblc-broken-links-checker.zip

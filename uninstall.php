@@ -1,8 +1,8 @@
 <?php
 /**
- * Uninstall Reviewshake Widgets plugin.
+ * Uninstall WP Broken Links Checker plugin.
  *
- * @package Reviewshake_Widgets
+ * @package WPBLC_Broken_Links_Checker
  * @author  Reviewshake
  */
 
@@ -23,6 +23,6 @@ if ( defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	/*
 	 * Delete plugin options.
 	 */
-	delete_option( 'reviewshake_widgets_settings' );
-	delete_option( 'reviewshake_widgets_db_version' );
+	delete_option( 'wpblc_broken_links_checker_settings' );
+	delete_option( 'wpblc_broken_links_checker_db_version' );
 }

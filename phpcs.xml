@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ruleset name="WordPress Coding Standards">
-	<description>Reviewshake Widgets PHP_CodeSniffer ruleset.</description>
+	<description>WP Broken Links Checker PHP_CodeSniffer ruleset.</description>
 
 	<!-- Exclude paths -->
 	<exclude-pattern>assets/</exclude-pattern>
@@ -8,8 +8,8 @@
 	<exclude-pattern>/vendor/</exclude-pattern>
 
 	<!-- Configs -->
-	<config name="minimum_supported_wp_version" value="4.7" />
-	<config name="testVersion" value="5.9" />
+	<config name="minimum_supported_wp_version" value="5.4" />
+	<config name="testVersion" value="6.5.2" />
 
 	<!-- Rules -->
 	<rule ref="WordPress-Extra">
@@ -20,7 +20,7 @@
 	<rule ref="WordPress-Docs"/>
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="reviewshake-widgets" />
+			<property name="text_domain" type="array" value="wpblc-broken-links-checker" />
 		</properties>
 	</rule>
 </ruleset>
