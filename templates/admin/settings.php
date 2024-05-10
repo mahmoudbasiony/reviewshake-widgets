@@ -37,10 +37,19 @@ if ( 'general' === $plugin_tab ) {
 
 //var_dump(WPBLC_Broken_Links_Checker_Utilities::get_content_to_scan( array( 'page', 'post' ) ));
 
-// $options = get_option( 'wpblc_broken_links_checker_links', array() );
+$options = get_option( 'wpblc_broken_links_checker_links', array() );
 // echo '<pre>';
 // var_dump($options);
 // echo '</pre>';
+
+$broken = $options['broken'] ?? array();
+$fixed = $options['fixed'] ?? array();
+
+//var_dump($fixed);
+
+$test = get_option( 'wpblc_broken_links_checker_links_test', array() );
+
+var_dump($test);
 ?>
 
 <div class="wrap wpblc-broken-links-checker" id="wpblc-broken-links-checker">
@@ -49,7 +58,7 @@ if ( 'general' === $plugin_tab ) {
 		<a href="admin.php?page=wpblc-broken-links-checker&tab=scan" class="nav-tab <?php echo 'scan' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Scan', 'wpblc-broken-links-checker' ); ?></a>
 	</nav>
 
-	<div class="postbox<?php echo 'account' === $plugin_tab ? ' not-full-width' : ''; ?>">
+	<div class="wpblc-broken-links-checker-inside-tabs">
 		<div class="inside tab tab-content <?php echo esc_attr( $plugin_tab ); ?>" id="wpblc-tab-<?php echo esc_attr( $plugin_tab ); ?>">
 			<?php require_once 'settings-' . $plugin_tab . '.php'; ?>
 		</div>

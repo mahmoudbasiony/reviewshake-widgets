@@ -55,14 +55,31 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			$sortable = $this->get_sortable_columns();
 
 			$this->_column_headers = array( $columns, $hidden, $sortable );
-			
 
-			$per_page     = get_user_option('links_per_page');
+			$filter = [
+				'type' => '',
+				'status' => '',
+				'location' => '',
+			];
+
+			if ( isset( $_REQUEST['wpblc_type_filter'] ) && '' !== $_REQUEST['wpblc_type_filter'] ) {
+				$filter['type'] = sanitize_text_field( $_REQUEST['wpblc_type_filter'] );
+			}
+
+			if ( isset( $_REQUEST['wpblc_status_filter'] ) && '' !== $_REQUEST['wpblc_status_filter'] ) {
+				$filter['status'] = sanitize_text_field( $_REQUEST['wpblc_status_filter'] );
+			}
+
+			if ( isset( $_REQUEST['wpblc_location_filter'] ) && '' !== $_REQUEST['wpblc_location_filter'] ) {
+				$filter['location'] = sanitize_text_field( $_REQUEST['wpblc_location_filter'] );
+			}
+
+			$per_page = get_user_option('links_per_page');
 			$current_page = $this->get_pagenum();
-			$total_items  = $this->record_count();
+			$total_items  = $this->record_count( $filter );
 
-			if ( !isset($per_page) || $per_page <= 0 ) {
-				$per_page = 10;
+			if ( ! isset($per_page) || $per_page <= 0 ) {
+				$per_page = 20;
 			}
 
 			$this->set_pagination_args([
@@ -70,27 +87,130 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 				'per_page'    => $per_page
 			]);
 
-			$this->items = $this->get_links($per_page, $current_page);
+
+			$this->items = $this->get_links($per_page, $current_page, $filter);
 		}
 
-		public function get_links($per_page = 5, $page_number = 1) {
+		/**
+		 * Get the links from the database.
+		 *
+		 * @param int $per_page     Number of items to display per page.
+		 * @param int $page_number  Current page number.
+		 * @param string $type      Type of link.
+		 * @param string $status    Status of link.
+		 * @param string $location  Location of link.
+		 *
+		 * @return array
+		 */
+		public function get_links($per_page = 5, $page_number = 1, $filter = []) {
 			$links = get_option( 'wpblc_broken_links_checker_links', [] );
 
 			$data = [];
 
 			if (isset($links['broken'])) {
-				// Apply pagination to the array
+				// if ( ! empty( $location ) ) {
+				// 	$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $location ) {
+
+				// 		return get_post_type( $link['post_id'] ) === $location;
+				// 	});
+				// }
+
+				if ( ! empty( array_filter( $filter ) ) ) {
+					foreach ($filter as $key => $value) {
+						if ( '' !== $value ) {
+							switch ($key) {
+								case 'type':
+									$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
+										return $link['link_source'] === $value;
+									});
+								break;
+
+								case 'status':
+									$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
+										return $link['marked_fixed'] === $value;
+									});
+								break;
+
+								case 'location':
+									$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
+										return get_post_type( $link['post_id'] ) === $value;
+									});
+								break;
+
+								default:
+									return $links['broken'];
+								break;
+							}
+						}
+					}
+				}
+
+				// var_dump($links['broken']);
+				// var_dump($filter);
+				// var_dump($_REQUEST['wpblc_location_filter']);
+				// Apply pagination to the array.
 				$data = array_slice($links['broken'], (($page_number - 1) * $per_page), $per_page);
 			}
 
 			return $data;
 		}
 
-		public function record_count() {
+		/**
+		 * Get the total number of records.
+		 *
+		 * @param array $filter The filter to apply.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @return int
+		 */
+		public function record_count( $filter ) {
 			$links = get_option( 'wpblc_broken_links_checker_links', [] );
 
-			// Count the total number of items in the array
-			return isset($links['broken']) ? count($links['broken']) : 0;
+			if ( empty( array_filter( $filter ) ) ) {
+				// Count the total number of items in the array
+				return isset($links['broken']) ? count($links['broken']) : 0;
+			}
+
+			foreach ($filter as $key => $value) {
+				if ( '' !== $value ) {
+					//var_dump($key, $value);
+
+					switch ($key) {
+						case 'type':
+							$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
+								return $link['link_source'] === $value;
+							});
+
+							return isset($links['broken']) ? count($links['broken']) : 0;
+						break;
+
+						case 'status':
+							$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
+								return $link['marked_fixed'] === $value;
+							});
+
+							return isset($links['broken']) ? count($links['broken']) : 0;
+						break;
+
+						case 'location':
+							$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
+								return get_post_type( $link['post_id'] ) === $value;
+							});
+
+							return isset($links['broken']) ? count($links['broken']) : 0;
+						break;
+
+						default:
+							return isset($links['broken']) ? count($links['broken']) : 0;
+						break;
+					}
+
+					// $links['broken'] = array_filter( $links['broken'], function( $link ) use ( $key, $value ) {
+					// 	return $link[$key] === $value;
+					// });
+				}
+			}
 		}
 
 		/**
@@ -102,13 +222,12 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 */
 		public function get_columns() {
 			return array(
-				'title' => __( 'Title', 'wpblc-broken-links-checker' ), // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText
-				'post_type' => __( 'Type', 'wpblc-broken-links-checker' ),
 				'link' => __( 'Link', 'wpblc-broken-links-checker' ),
 				'type' => __( 'Status', 'wpblc-broken-links-checker' ),
-				'code' => __( 'Code', 'wpblc-broken-links-checker' ),
-				'text' => __( 'Message', 'wpblc_broken_links_checker' ),
-				'detected_at' => __( 'Detected at', 'wpblc_broken_links_checker' ),
+				'code' => __( 'Response', 'wpblc-broken-links-checker' ),
+				'title' => __( 'Source', 'wpblc-broken-links-checker' ),
+				'post_type' => __( 'Post Type', 'wpblc-broken-links-checker' ),
+				'detected_at' => __( 'Date', 'wpblc_broken_links_checker' ),
 			);
 		}
 
@@ -135,6 +254,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 */
 		public function column_default( $item, $column_name ) {
 			switch ( $column_name ) {
+				case 'type':
 				case 'title':
 				case 'post_type':
 				case 'code':
@@ -142,9 +262,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 				case 'link':
 				case 'detected_at':
 					return $item[$column_name];
-
-				case 'type':
-					return ucfirst( $item['type'] );
 
 				default:
 					return print_r( $item, true );
@@ -167,15 +284,10 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 					esc_url( get_edit_post_link( $item['post_id'] ) ),
 					__( 'Edit', 'wpblc-broken-links-checker' )
 				),
-				'find' => sprintf(
+				'view' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
 					esc_url( $this->get_page_url( $item['post_id'] ) ),
-					__( 'Find', 'wpblc-broken-links-checker' )
-				),
-				'mark-as-fixed' => sprintf(
-					'<a id="wpblc-mark-as-fixed" data-link="%s" href="#">%s</a>',
-					esc_attr( $item['link'] ),
-					__( 'Mark as Fixed', 'wpblc-broken-links-checker' )
+					__( 'View', 'wpblc-broken-links-checker' )
 				),
 			);
 
@@ -200,18 +312,35 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 				),
 				'find' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					esc_url( $this->get_page_url( $item['post_id'] ) ),
+					esc_url( add_query_arg( 'broken-link', $item['link'], $this->get_page_url( $item['post_id'] ) ) ),
 					__( 'Find', 'wpblc-broken-links-checker' )
 				),
 				'mark-as-fixed' => sprintf(
-					'<a id="wpblc-mark-as-fixed" data-link="%s" href="#">%s</a>',
+					'<a id="wpblc-mark-as-fixed" class="wpblc-mark-as-fixed %s" data-link="%s" data-post-id="%s" href="#">%s</a>',
+					esc_attr( $item['marked_fixed'] ),
 					esc_attr( $item['link'] ),
-					__( 'Mark as Fixed', 'wpblc-broken-links-checker' )
+					esc_attr( $item['post_id'] ),
+					'fixed' === $item['marked_fixed'] ? __( 'Mark as Broken', 'wpblc-broken-links-checker' ) : __( 'Mark as Fixed', 'wpblc-broken-links-checker' )
 				),
 			);
 
 			return sprintf( '<strong><a href="%1$s" target="_blank">%1$s</a></strong> %2$s', esc_url( $item['link'] ), $this->row_actions( $actions ) );
 		}
+
+		/**
+		 * Renders the type column.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array $item The current item.
+		 *
+		 * @return string
+		 */
+		public function column_type( $item ) {
+			$title = 'fixed' === $item['marked_fixed'] ? __( 'Fixed', 'wpblc-broken-links-checker' ) : $item['type'];
+			return sprintf( '<div class="status-type %1$s">%2$s</div>', esc_attr( $item['marked_fixed'] ), ucwords( $title ) );
+		}
+	
 
 		/**
 		 * Renders the post type column.
@@ -256,26 +385,47 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 * @return string
 		 */
 		public function column_code( $item ) {
-			return sprintf( '<a href="%1$s" target="_blank">%2$s</a>', esc_url( 'https://http.dev/' . $item['code'] ), $item['code'] );
+			return sprintf( '<code>%1$s<a href="%2$s" target="_blank">%3$s</a></code><span class="message">%4$s</span>', esc_html__( 'Code: ', 'wpblc-broken-links-checker' ) ,esc_url( 'https://http.dev/' . $item['code'] ), $item['code'], $item['text'] );
 		}
 
 		/**
-		 * Renders the table.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @return void
+		 * 
 		 */
-		// public function display() {
-		// 	$this->prepare_items();
+		public function extra_tablenav( $which ) {
+			if ( 'top' === $which ) {
+				// The code that goes before the table is here
+				$selected_type = isset( $_REQUEST['wpblc_type_filter'] ) ? sanitize_text_field( $_REQUEST['wpblc_type_filter'] ) : '';
+				$selected_status = isset( $_REQUEST['wpblc_status_filter'] ) ? sanitize_text_field( $_REQUEST['wpblc_status_filter'] ) : '';
+				$selected_location = isset( $_REQUEST['wpblc_location_filter'] ) ? sanitize_text_field( $_REQUEST['wpblc_location_filter'] ) : '';
+				?>
+					<div class="alignleft actions">
+						<select name="wpblc_type_filter">
+							<option value="" <?php selected( $selected_type, '' ); ?>"><?php esc_html_e( 'All Types', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="internal" <?php selected( $selected_type, 'internal' ); ?>"><?php esc_html_e( 'Internal', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="external" <?php selected( $selected_location, 'external' ) ?>"><?php esc_html_e( 'External', 'wpblc-broken-links-checker' ); ?></option>
+						</select>
 
-		// 	echo '<div class="wrap">';
-		// 	echo '<h1 class="wp-heading-inline">' . esc_html__( 'Broken Links', 'wpblc-broken-links-checker' ) . '</h1>';
-		// 	$this->display_tablenav( 'top' );
-		// 	$this->display();
-		// 	echo '</div>';
-		// }
+						<select name="wpblc_status_filter">
+							<option value="" <?php selected( $selected_status, '' ); ?>"><?php esc_html_e( 'All Statuses', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="fixed" <?php selected( $selected_status, 'fixed' ); ?>"><?php esc_html_e( 'Fixed', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="not-fixed" <?php selected( $selected_status, 'not-fixed' ); ?>""><?php esc_html_e( 'Not Fixed', 'wpblc-broken-links-checker' ); ?></option>
+						</select>
 
+						<select name="wpblc_location_filter">
+							<option value="" <?php selected( $selected_location, '' ); ?>"><?php esc_html_e( 'All Locations', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="post" <?php selected( $selected_location, 'post' ); ?>"><?php esc_html_e( 'Posts', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="page" <?php selected( $selected_location, 'page' ); ?>"><?php esc_html_e( 'Pages', 'wpblc-broken-links-checker' ); ?></option>
+							<option value="comment" <?php selected( $selected_location, 'comment' ); ?>"><?php esc_html_e( 'Comments', 'wpblc-broken-links-checker' ); ?></option>
+						</select>
+
+						<input type="hidden" name="page" value="wpblc-broken-links-checker">
+						<input type="hidden" name="tab" value="scan">
+						<?php submit_button('Filter', 'button', 'filter_action', false); ?>
+					</div>
+
+				<?php
+			}
+		}
 		/**
 		 * Renders the table navigation.
 		 *
@@ -292,32 +442,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			$this->pagination( $which );
 
 			echo '<br class="clear" />';
-			echo '</div>';
-		}
-
-		/**
-		 * Renders the table navigation.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param string $which The current navigation position.
-		 *
-		 * @return void
-		 */
-		public function extra_tablenav( $which ) {
-			$actions = array(
-				'scan_site' => array(
-					'confirmation' => __( 'Are you sure you want to scan the site for broken links?', 'wpblc-broken-links-checker' ),
-					'button'       => __( 'Scan Now', 'wpblc-broken-links-checker' ),
-				),
-			);
-
-			echo '<div class="alignleft actions">';
-
-			foreach ( $actions as $action => $params) {
-				echo '<a class="button button-primary" id="wpblc-manual-scan" href="' . wp_nonce_url( admin_url( 'admin.php?page=wpblc-broken-links-checker&tab=scan&action=' . $action ), $action, '_wpnonce' ) . '">' . $params['button'] . '</a>';
-			}
-
 			echo '</div>';
 		}
 

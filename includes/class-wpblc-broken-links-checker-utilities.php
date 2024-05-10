@@ -185,8 +185,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 
 			$posts = $wpdb->get_results( $query );
 
-			$psize              = count( $posts );
-
 			$args = array(
 				'post_type'      => $post_types,
 				'posts_per_page' => -1,
@@ -194,7 +192,9 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 			);
 
 			$post_ids = get_posts( $args );
-			$links_in_db = [];
+			$links_in_db = get_option( 'wpblc_broken_links_checker_links', array() );
+			$marked_fixed = isset( $links_in_db['fixed'] ) ? $links_in_db['fixed'] : array();
+			$links_to_update = [];
 
 			foreach( $post_ids as $post_id ) {
 				$get_the_content = get_the_content( null, false, $post_id );
@@ -207,15 +207,27 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					foreach( $links as $link ) {
 						$status = self::check_link( $link, $post_id );
 
-						$links_in_db[$status['type']][] = $status;
+						$link_source = self::get_link_source( $link );
+						$status['link_source'] = $link_source;
+
+						$links_to_update[$status['type']][] = $status;
+
+						if ( isset( $marked_fixed ) && ! empty( $marked_fixed ) ) {
+							$links_column = array_column($marked_fixed, 'link');
+							$position = array_search($link, $links_column);
+
+							if ( false !== $position ) {
+								$links_to_update[$status['type']][$position]['marked_fixed'] = 'fixed';
+							}
+						}
 					}
 				}
 			}
 
-			return update_option( 'wpblc_broken_links_checker_links', $links_in_db );
+			return update_option( 'wpblc_broken_links_checker_links', $links_to_update );
 
 			// echo '<pre>';
-			// var_dump($links_in_db);
+			// var_dump($links_to_update);
 			// echo '</pre>';
 			
 
@@ -311,6 +323,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				'link' => $link,
 				'post_id' => $post_id,
 				'detected_at' => self::convert_timezone(),
+				'marked_fixed' => ''
 			];
 
 			// Handle the filtered link if false
@@ -322,6 +335,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					'link' => $link,
 					'post_id' => $post_id,
 					'detected_at' => self::convert_timezone(),
+					'marked_fixed' => 'not-fixed',
 				];
 
 			// Handle the filtered link if in-proper array
@@ -333,6 +347,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					'link' => $link,
 					'post_id' => $post_id,
 					'detected_at' => self::convert_timezone(),
+					'marked_fixed' => 'not-fixed',
 				];
 		
 			// Return the filtered link as a status if proper array
@@ -358,6 +373,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					'link' => $link,
 					'post_id' => $post_id,
 					'detected_at' => self::convert_timezone(),
+					'marked_fixed' => 'not-fixed',
 				];
 				
 			// If the match is local, easy check
@@ -563,6 +579,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				'link' => $url,
 				'post_id' => $post_id,
 				'detected_at' => self::convert_timezone(),
+				'marked_fixed' => 'not-fixed'
 			] );
 
 			// Return the array
@@ -641,6 +658,16 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 			// We got nothin'
 			return false;
 		} // End is_youtube_link()
+
+		/**
+		 * 
+		 */
+		public static function get_link_source($link) {
+			$link_host = parse_url($link, PHP_URL_HOST);
+			$site_host = parse_url(get_site_url(), PHP_URL_HOST);
+		
+			return $link_host === $site_host ? 'internal' : 'external';
+		}
 
 		/**
 		 * Get the bad status codes we are using

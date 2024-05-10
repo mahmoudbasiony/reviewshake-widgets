@@ -76,7 +76,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Assets' ) ) :
 		 */
 		public function styles() {
 			// Global admin styles.
-			wp_enqueue_style( 'wpblc_broken_links_checker_admin_styles', WPBLC_BROKEN_LINKS_CHECKER_ROOT_URL . 'assets/dist/css/admin/wpblc-broken-links-checker-admin-styles.min.css', array( '' ), WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_VERSION, 'all' );
+			wp_enqueue_style( 'wpblc_broken_links_checker_admin_styles', WPBLC_BROKEN_LINKS_CHECKER_ROOT_URL . 'assets/dist/css/admin/wpblc-broken-links-checker-admin-styles.min.css', array(), WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_VERSION, 'all' );
 		}
 	}
 
