@@ -1,35 +1,64 @@
 // Backend styles.
-.wpblc-broken-links-checker-scan{
+.wpblc-broken-links-checker-general {
+	#email_addresses {
+		width: 700px;
+	}
+}
+
+.wpblc-broken-links-checker-scan {
 
 	.wpblc-broken-links-checker-scan-wrap {
 
 		.wpblc-broken-links-checker-links-table {
-			.status-type {
-				color: white;
-				padding: 5px 10px;
-				font-weight: bold;
-				margin-bottom: 10px;
-				width: 100px;
-				text-align: center;
-				text-transform: uppercase;
-				box-shadow: 0 2px 4px 0 rgba(7, 36, 86, 0.075);
-				border: 1px solid rgba(7, 36, 86, 0.075);
-				border-radius: 10px;
+			.column-type {
+				width: 13%;
+			}
+			.column-code {
+				width : 13%;
+			}
+			.column-title {
+				width: 13%;
+			}
+			.column-post_type {
+				width: 10%;
+			}
+			.column-detected_at {
+				width: 12%;
 			}
 
-			.status-type.not-fixed {
-				background: red;
+			tbody {
+				.wpblc-mark-as-fixed.fixed {
+					color: #b32d2e;
+				}
+
+				.status-type {
+					color: white;
+					padding: 5px 10px;
+					font-weight: bold;
+					margin-bottom: 10px;
+					width: 100px;
+					text-align: center;
+					text-transform: uppercase;
+					box-shadow: 0 2px 4px 0 rgba(7, 36, 86, 0.075);
+					border: 1px solid rgba(7, 36, 86, 0.075);
+					border-radius: 10px;
+				}
+	
+				.status-type.not-fixed {
+					background: red;
+				}
+	
+				.status-type.fixed {
+					background: green;
+				}
+	
+				.message {
+					display: block;
+					font-size: 12px;
+					padding: 5px;
+				}
 			}
 
-			.status-type.fixed {
-				background: green;
-			}
-
-			.message {
-				display: block;
-				font-size: 12px;
-				padding: 5px;
-			}
 		}
 
 		.wpblc_none {
@@ -88,5 +117,4 @@
 		}
 
 	}
-
 }

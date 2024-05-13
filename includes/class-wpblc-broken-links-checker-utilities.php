@@ -11,179 +11,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
+
 	/**
 	 * Utilities.
 	 *
 	 * @since 1.0.0
 	 */
 	class WPBLC_Broken_Links_Checker_Utilities {
-		/**
-		 * 
-		 */
-		public static function getLinksFromPages( $post_types = array( 'page' ) ) {
-			global $wpdb;
-
-			$s_time = time();
-
-			$placeholders = implode(', ', array_fill(0, count($post_types), '%s'));
-			$query = $wpdb->prepare("SELECT `ID` FROM {$wpdb->prefix}posts WHERE `post_status` = 'publish' AND `post_type` IN ($placeholders)", $post_types);
-
-			$pages = $wpdb->get_results( $query );
-
-			$psize              = count( $pages );
-
-			for ( $page_index = 0; $page_index < $psize; $page_index ++ ) {
-				$page_id = $pages[ $page_index ]->ID;
-				$base    = get_permalink( $page_id );
-				$content = $wpdb->get_results( $wpdb->prepare( 'select `post_content`,`post_title` from %1sposts where `id`=%1s', array( $wpdb->prefix, $page_id ) ) );
-				$title   = $content[0]->post_title;
-				$content = $content[0]->post_content;
-
-				$links      = preg_split( '/<a/', $content );
-				$lsize      = count( $links );
-				$hash_links = array();
-
-				$links = preg_split( '/<a | <link/', $content );
-				self::moblc_get_links( 'href', $links, $hash_links );
-
-				$links = preg_split( '/<img | <iframe/', $content );
-				self::moblc_get_links( 'src', $links, $hash_links );
-
-				if ( count( $hash_links ) ) {
-					$hashs = array_keys( $hash_links );
-					$lsize = count( $hash_links );
-
-					for ( $link_index = 0; $link_index < $lsize; $link_index ++ ) {
-
-						$link_hash = $hashs[ $link_index ];
-						$link      = $hash_links[ $link_hash ];
-
-						if ( ! empty( $link ) && filter_var( $link, FILTER_VALIDATE_URL ) ) {
-							$link  = trim( self::relative_to_absolute( $link, $base ) );
-							$stime = time();
-
-							if ( strpos( $link, '://youtube' ) !== false || strpos( $link, '://www.youtube' ) !== false ) {
-								$body = wp_remote_retrieve_body( wp_remote_post( $link ) );
-
-								if ( strpos( $body, 'Video unavailable' ) !== false || strpos( $body, 'This video isn\'t available any more' ) !== false || strpos( $body, 'Something went wrong' ) ) {
-									$response = new WP_Error( '404', __( 'Video unavailable', 'wp' ) );
-								} else {
-									$response = wp_remote_head( $link );
-								}
-							} else {
-								$response = wp_remote_head( $link );
-							}
-
-							$status   = self::get_response_code( $response );
-
-							var_dump($status);
-							var_dump($link);
-							$ltime = time();
-							$time  = ( $ltime - $stime ) . 's';
-							
-						}
-					}
-				}
-				$link_index = 0;
-			}
-
-			return;
-		}
-
-		public static function get_response_code( $response ) {
-			if ( is_wp_error( $response ) ) {
-				return $response->get_error_code();
-			}
-
-			return wp_remote_retrieve_response_code( $response );
-		}
-
-		public static function moblc_get_links( $moblc_attr, $links, &$link_array ) {
-			$lsize = count( $links );
-
-			for ( $index = 0; $index < $lsize; $index ++ ) {
-				$link = $links[ $index ];
-				if ( strpos( $link, $moblc_attr ) !== false ) {
-					$link = preg_replace( '/.*\s*' . $moblc_attr . "=[\"|']/sm", '', $link );
-					$link = preg_replace( "/[\"|'].*/s", '', $link );
-					$link = trim( $link );
-					if ( strpos( $link, '/embed/' ) !== false ) {
-						list( , $video_id ) = explode( '/embed/', $link );
-						$link               = 'https://youtube.com/watch?v=' . $video_id;
-						list( $video_id, )  = explode( '?', $video_id );
-						$link               = 'https://youtube.com/watch?v=' . $video_id;
-					}
-					if ( ! empty( $link ) && '#' !== $link ) {
-						array_push( $link_array, $link );
-					}
-				}
-			}
-		}
 
 		/**
-		 * Function for keeping track of execution time.
-		 *
-		 * @param mixed $s_time scanning time.
-		 * @return bool
-		 */
-		public static function moblc_check_time( $s_time ) {
-			$max_time = ini_get( 'max_execution_time' );
-			if ( ( $max_time - ( time() - $s_time ) ) <= 10 ) {
-				return true;
-			}
-
-			return false;
-		}
-
-		/* Function for making link relative to absolute.
 		*
-		* @param mixed $rel relative.
-		* @param mixed $base base.
-		* @return string
 		*/
-	   public static function relative_to_absolute( $rel, $base ) {
-		   $parse_base = wp_parse_url( $base );
-		   $scheme     = $parse_base['scheme'];
-		   $host       = $parse_base['host'];
-		   $path       = $parse_base['path'];
-	   
-		   if ( strpos( $rel, '//' ) === 0 ) {
-			   return $scheme . ':' . $rel;
-		   }
-	   
-		   if ( wp_parse_url( $rel, PHP_URL_SCHEME ) !== '' ) {
-			   return $rel;
-		   }
-	   
-		   if ( '#' === $rel[0] || '?' === $rel[0] ) {
-			   return $base . $rel;
-		   }
-	   
-		   $path = preg_replace( '#/[^/]*$#', '', $path );
-	   
-		   if ( '/' === $rel[0] ) {
-			   $path = '';
-		   }
-		   $abs = $host . $path . '/' . $rel;
-		   $abs = preg_replace( '[(/\.?/)]', '/', $abs );
-		   $abs = preg_replace( '[\/(?!\.\.)[^\/]+\/(\.\.\/)+]', '/', $abs );
-	   
-		   return $scheme . '://' . $abs;
-	   }
+		public static function get_content_to_scan( ) {
+			$settings = get_option( 'wpblc_broken_links_checker_settings', array() );
+			$email_enabled = isset( $settings['email_notifications'] ) ? $settings['email_notifications'] : 'off';
+			$email_addresses = isset( $settings['email_addresses'] ) ? $settings['email_addresses'] : '';
+			$number_of_links = isset( $settings['number_of_links'] ) ? $settings['number_of_links'] : 'all';
+			$set_number = isset( $settings['set_links_number'] ) ? $settings['set_links_number'] : 0;
+			$scope_of_scan = isset( $settings['scope_of_scan'] ) ? $settings['scope_of_scan'] : ['all'];
+			$exclusion_urls = isset( $settings['exclusion_urls'] ) ? $settings['exclusion_urls'] : '';
+			$links_to_exclude = explode( "\n", $exclusion_urls );
+			$links_to_exclude = array_map( function( $link ) {
+				return rtrim( trim( $link ), '/' );
+			}, $links_to_exclude );
 
-	   /**
-		* 
-	    */
-		public static function get_content_to_scan( $post_types = array( 'page' ) ) {
+			if ( $number_of_links == 'all' ) {
+				$number_of_links = -1;
+			} else {
+				$number_of_links = (int) $set_number;
+			}
 
-			global $wpdb;
+			$scan_comment = false;
+			$data_to_scan = [];
 
-			$s_time = time();
+			if ( in_array( 'all', $scope_of_scan ) ) {
+				$post_types = ['post', 'page'];
+				$scan_comment = true;
+			} else {
+				$post_types = $scope_of_scan;
 
-			$placeholders = implode(', ', array_fill(0, count($post_types), '%s'));
-			$query = $wpdb->prepare("SELECT `ID` FROM {$wpdb->prefix}posts WHERE `post_status` = 'publish' AND `post_type` IN ($placeholders)", $post_types);
-
-			$posts = $wpdb->get_results( $query );
+				if ( in_array( 'comment', $scope_of_scan ) ) {
+					unset( $scope_of_scan['comment'] );
+					$scan_comment = true;
+				}
+			}
 
 			$args = array(
 				'post_type'      => $post_types,
@@ -192,64 +63,134 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 			);
 
 			$post_ids = get_posts( $args );
+
+			$data_to_scan = array_merge( $data_to_scan, $post_ids );
+
+			if ( $scan_comment ) {
+				$comment_args = array(
+					'status' => 'approve',
+				);
+
+				$comments = get_comments( $comment_args );
+
+				$data_to_scan = array_merge( $data_to_scan, $comments );
+			}
+
 			$links_in_db = get_option( 'wpblc_broken_links_checker_links', array() );
 			$marked_fixed = isset( $links_in_db['fixed'] ) ? $links_in_db['fixed'] : array();
 			$links_to_update = [];
 
-			foreach( $post_ids as $post_id ) {
-				$get_the_content = get_the_content( null, false, $post_id );
+			$count = 0;
+			$break = false;
 
-				$content = apply_filters( 'the_content', $get_the_content );
+			foreach( $data_to_scan as $single ) {
+				if ( is_object( $single ) ) {
+					$is_comment = true;
+					$post_id = $single->comment_ID;
+					$content = $single->comment_content;
+				} else {
+					$is_comment = false;
+					$post_id = $single;
+					$get_the_content = get_the_content( null, false, $post_id );
+
+					$content = apply_filters( 'the_content', $get_the_content );
+				}
 
 				$links = self::extract_links( $content );
 
 				if ( ! empty( $links ) ) {
 					foreach( $links as $link ) {
-						$status = self::check_link( $link, $post_id );
+						$count ++;
+
+						if ( $number_of_links !== -1 && $count > (int) $number_of_links ) {
+							$break = true;
+							break;
+						}
+
+						if ( is_array( $links_to_exclude ) && in_array( rtrim( $link, '/' ), $links_to_exclude ) ) {
+							continue;
+						}
+
+						$status = self::check_link( $link, $post_id, $is_comment );
 
 						$link_source = self::get_link_source( $link );
 						$status['link_source'] = $link_source;
 
-						$links_to_update[$status['type']][] = $status;
-
 						if ( isset( $marked_fixed ) && ! empty( $marked_fixed ) ) {
-							$links_column = array_column($marked_fixed, 'link');
-							$position = array_search($link, $links_column);
 
-							if ( false !== $position ) {
-								$links_to_update[$status['type']][$position]['marked_fixed'] = 'fixed';
+							$fixed = array_filter($marked_fixed, function($fixed_link, $index) use ($link) {
+								return $fixed_link['link'] == $link;
+							}, ARRAY_FILTER_USE_BOTH );
+
+							if ( $fixed && is_array( $fixed ) ) {
+								$index = key($fixed);
+								$status['marked_fixed'] = 'fixed';
+								$status['detected_at'] = isset( $fixed[$index]['detected_at'] ) ? $fixed[$index]['detected_at'] : self::convert_timezone();
 							}
 						}
+
+						$links_to_update[$status['type']][] = $status;
+
+						
 					}
+				}
+
+				if ($break) {
+					break;
 				}
 			}
 
+			// Send email
+			self::send_mails( $email_enabled, $email_addresses, $links_to_update['broken'] );
+
+			$links_to_update = array_merge( ['fixed' => $marked_fixed], $links_to_update );
 			return update_option( 'wpblc_broken_links_checker_links', $links_to_update );
-
-			// echo '<pre>';
-			// var_dump($links_to_update);
-			// echo '</pre>';
-			
-
-			// // Get the content
-			// $content = '';
-			// foreach ( $posts as $post ) {
-
-			// 	$post_id = $post->ID;
-			// 	// Get the content
-			// 	$get_the_content = get_the_content( null, false, $post_id );
-
-			// 	//$content = apply_filters( 'the_content', $get_the_content );
-
-			// 	// Extract links
-			// 	$links = self::extract_links( $get_the_content );
-
-			// 	var_dump($links);
-			// }
-
-			// Return
-			//return $content;
 		}
+
+		/**
+		 * Send email.
+		 *
+		 * @param string $email_enabled Default 'off'.
+		 * @param string $email_addresses Default ''.
+		 * @param array $broken_links Default [].
+		 *
+		 * @since 1.0.0
+		 *
+		 * @return void
+		 */
+		public static function send_mails( $email_enabled = 'off', $email_addresses = '', $broken_links = []) {
+			if ( 'on' === $email_enabled && ! empty( $email_addresses ) && ! empty( $broken_links ) ) {
+				// Headers
+				$headers[] = 'From: '.WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME.' <'.get_bloginfo( 'admin_email' ).'>';
+				$headers[] = 'Content-Type: text/html; charset=UTF-8';
+
+				// Subject
+				$subject = esc_html__( 'Broken Links Found', 'wpblc-broken-links-checker');
+
+				// Message
+				$message = 'The following broken links were found today on '. esc_url( get_site_url() ) .':<br><br>';
+
+				$links_to_send = [];
+
+				foreach ( $broken_links as $type => $link ) {
+					if ( 'fixed' !== $link['marked_fixed'] ) {
+						$links_to_send[] = 'URL: '.$link['link'].'<br>Status Code: '.$link['code'].' - '.$link['text'];
+					}
+				}
+
+				// Verify before sending
+				if ( !empty( $links_to_send ) ) {
+					// Add links and footer
+					$message .= implode( '<br><br>', $links_to_send ).'<br><br><em>- '.WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME.' Plugin</em>';
+
+					// Try or log
+					if ( ! wp_mail( $email_addresses, $subject, $message, $headers ) ) {
+						error_log( WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME.' email could not be sent. Please check for issues with WP Mailer.' );
+					}
+				}
+			}
+		}
+
 		/**
 		 * Extract links from content
 		 *
@@ -311,7 +252,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 		 * @param integer $post_id
 		 * @return array
 		 */
-		public static function check_link( $link, $post_id ) {
+		public static function check_link( $link, $post_id, $is_comment ) {
 			// Filter the link
 			$link = apply_filters( 'wpblc_link_before_prechecks', $link );
 
@@ -321,7 +262,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				'code' => 200,
 				'text' => 'OK',
 				'link' => $link,
-				'post_id' => $post_id,
+				'ID' => $post_id,
+				'is_comment' => $is_comment,
 				'detected_at' => self::convert_timezone(),
 				'marked_fixed' => ''
 			];
@@ -333,7 +275,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					'code' => 0,
 					'text' => 'Did not pass pre-check filter',
 					'link' => $link,
-					'post_id' => $post_id,
+					'ID' => $post_id,
+					'is_comment' => $is_comment,
 					'detected_at' => self::convert_timezone(),
 					'marked_fixed' => 'not-fixed',
 				];
@@ -345,7 +288,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					'code' => 0,
 					'text' => 'Did not pass pre-check filter',
 					'link' => $link,
-					'post_id' => $post_id,
+					'ID' => $post_id,
+					'is_comment' => $is_comment,
 					'detected_at' => self::convert_timezone(),
 					'marked_fixed' => 'not-fixed',
 				];
@@ -371,7 +315,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 					'code' => 0,
 					'text' => 'Empty link',
 					'link' => $link,
-					'post_id' => $post_id,
+					'ID' => $post_id,
+					'is_comment' => $is_comment,
 					'detected_at' => self::convert_timezone(),
 					'marked_fixed' => 'not-fixed',
 				];
@@ -383,7 +328,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				if ( !url_to_postid( $link ) ) {
 
 					// It may be redirected or an archive page, so let's check status anyway
-					return self::check_url_status_code( $link, $post_id );
+					return self::check_url_status_code( $link, $post_id, $is_comment );
 				}
 
 			// Otherwise
@@ -398,7 +343,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				}
 
 				// Return the status
-				return self::check_url_status_code( $link, $post_id );
+				return self::check_url_status_code( $link, $post_id, $is_comment );
 			}
 
 			// Return the good status
@@ -412,7 +357,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 		 * @param integer|null $timeout
 		 * @return array
 		 */
-		public static function check_url_status_code( $url, $post_id = 0, $timeout = null ) {
+		public static function check_url_status_code( $url, $post_id = 0, $is_comment, $timeout = null ) {
 			// Get timeout
 			if ( is_null( $timeout ) ) {
 				$timeout = 10;
@@ -577,7 +522,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				'code' => $code,
 				'text' => isset( $codes[ $code ] ) ? $codes[ $code ] : $error,
 				'link' => $url,
-				'post_id' => $post_id,
+				'ID' => $post_id,
+				'is_comment' => $is_comment,
 				'detected_at' => self::convert_timezone(),
 				'marked_fixed' => 'not-fixed'
 			] );

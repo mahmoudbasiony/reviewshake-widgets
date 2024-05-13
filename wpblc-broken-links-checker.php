@@ -26,6 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /*
  * Globals constants.
  */
+define( 'WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME', 'WP Broken Links Checker' );
 define( 'WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_VERSION', '1.0.0' );
 define( 'WPBLC_BROKEN_LINKS_CHECKER_MIN_PHP_VER', '7.3' );
 define( 'WPBLC_BROKEN_LINKS_CHECKER_MIN_WP_VER', '5.4' );
@@ -111,6 +112,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker' ) ) :
 			 */
 			include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/functions.php';
 			include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/class-wpblc-broken-links-checker-utilities.php';
+			include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/class-wpblc-broken-links-checker-schedule.php';
 
 			/*
 			 * Back-end includes.
@@ -121,6 +123,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker' ) ) :
 				include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/admin/class-wpblc-broken-links-checker-admin-settings.php';
 				include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/admin/class-wpblc-broken-links-checker-admin-links-list-table.php';
 				include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/admin/class-wpblc-broken-links-checker-admin-ajax.php';
+				include_once WPBLC_BROKEN_LINKS_CHECKER_ROOT_PATH . '/includes/admin/class-wpblc-broken-links-checker-admin-export.php';
 			}
 		}
 
@@ -138,12 +141,16 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker' ) ) :
 		 * Activation hooks.
 		 *
 		 * @since   1.0.0
-		 * @version 2.0.0
 		 *
 		 * @return void
 		 */
 		public static function activate() {
-			// Nothing to do for now.
+			$settings = get_option( 'wpblc_broken_links_checker_settings', array() );
+			$frequency = isset( $settings['scan_frequency'] ) ? $settings['scan_frequency'] : 'daily';
+
+			if ( ! wp_next_scheduled( 'wpblc_broken_links_checker_scheduled_event' ) ) {
+				wp_schedule_event( time(), $frequency, 'wpblc_broken_links_checker_scheduled_event' );
+			}
 		}
 
 		/**
@@ -154,7 +161,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker' ) ) :
 		 * @return void
 		 */
 		public static function deactivate() {
-			// Nothing to do for now.
+			wp_clear_scheduled_hook( 'wpblc_broken_links_checker_scheduled_event' );
 		}
 
 		/**

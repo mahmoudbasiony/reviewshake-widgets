@@ -55,7 +55,9 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 
 				// Capture the output of the display method
 				ob_start();
+				echo '<form method="get">';
 				$broken_links_table->display();
+				echo '</form>';
 				$table_html = ob_get_clean();
 		
 				// Return the table HTML in the AJAX response

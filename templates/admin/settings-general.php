@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings = get_option( 'wpblc_broken_links_checker_settings', array() );
 ?>
 
-    <div class="wrap">
+    <div class="wpblc-broken-links-checker-general wrap">
         <form action="options.php" method="post">
             <?php
             settings_fields('wpblc_broken_links_checker_settings');

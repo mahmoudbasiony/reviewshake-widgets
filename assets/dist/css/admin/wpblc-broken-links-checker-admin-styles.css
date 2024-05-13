@@ -1,4 +1,26 @@
-.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .status-type {
+.wpblc-broken-links-checker-general #email_addresses {
+  width: 700px;
+}
+
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .column-type {
+  width: 13%;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .column-code {
+  width: 13%;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .column-title {
+  width: 13%;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .column-post_type {
+  width: 10%;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .column-detected_at {
+  width: 12%;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table tbody .wpblc-mark-as-fixed.fixed {
+  color: #b32d2e;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table tbody .status-type {
   color: white;
   padding: 5px 10px;
   font-weight: bold;
@@ -10,13 +32,13 @@
   border: 1px solid rgba(7, 36, 86, 0.075);
   border-radius: 10px;
 }
-.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .status-type.not-fixed {
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table tbody .status-type.not-fixed {
   background: red;
 }
-.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .status-type.fixed {
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table tbody .status-type.fixed {
   background: green;
 }
-.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .message {
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table tbody .message {
   display: block;
   font-size: 12px;
   padding: 5px;

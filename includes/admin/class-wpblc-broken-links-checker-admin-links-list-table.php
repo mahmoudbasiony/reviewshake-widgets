@@ -111,7 +111,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 				// if ( ! empty( $location ) ) {
 				// 	$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $location ) {
 
-				// 		return get_post_type( $link['post_id'] ) === $location;
+				// 		return get_post_type( $link['ID'] ) === $location;
 				// 	});
 				// }
 
@@ -133,7 +133,11 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 
 								case 'location':
 									$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
-										return get_post_type( $link['post_id'] ) === $value;
+										if ( $link['is_comment'] ) {
+											return 'comment' === $value;
+										}
+			
+										return get_post_type( $link['ID'] ) === $value;
 									});
 								break;
 
@@ -195,7 +199,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 
 						case 'location':
 							$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
-								return get_post_type( $link['post_id'] ) === $value;
+								return $link['is_comment'] ? __( 'Comments', 'wpblc-broken-links-checker' ) : get_post_type( $link['ID'] ) === $value;
 							});
 
 							return isset($links['broken']) ? count($links['broken']) : 0;
@@ -281,17 +285,17 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			$actions = array(
 				'edit' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					esc_url( get_edit_post_link( $item['post_id'] ) ),
+					$item['is_comment'] ? esc_url( get_edit_comment_link( $item['ID'] ) ) : esc_url( get_edit_post_link( $item['ID'] ) ),
 					__( 'Edit', 'wpblc-broken-links-checker' )
 				),
 				'view' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					esc_url( $this->get_page_url( $item['post_id'] ) ),
+					$item['is_comment'] ? esc_url( get_comment_link( $item['ID'] ) ) : esc_url( $this->get_page_url( $item['ID'] ) ),
 					__( 'View', 'wpblc-broken-links-checker' )
 				),
 			);
 
-			return sprintf( '<strong><a href="%1$s" target="_blank">%2$s</a></strong> %3$s', esc_url( get_permalink( $item['post_id'] ) ), $this->get_post_or_comment_title($item), $this->row_actions( $actions ) );
+			return sprintf( '<strong><a href="%1$s" target="_blank">%2$s</a></strong> %3$s', $item['is_comment'] ? esc_url( get_comment_link( $item['ID'] ) ) : esc_url( get_permalink( $item['ID'] ) ), $this->get_post_or_comment_title($item), $this->row_actions( $actions ) );
 		}
 
 		/**
@@ -307,19 +311,19 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			$actions = array(
 				'edit' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					esc_url( get_edit_post_link( $item['post_id'] ) ),
+					$item['is_comment'] ? esc_url( get_edit_comment_link( $item['ID'] ) ) :esc_url( get_edit_post_link( $item['ID'] ) ),
 					__( 'Edit', 'wpblc-broken-links-checker' )
 				),
 				'find' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					esc_url( add_query_arg( 'broken-link', $item['link'], $this->get_page_url( $item['post_id'] ) ) ),
+					$item['is_comment'] ? esc_url( add_query_arg( 'broken-link', $item['link'], get_comment_link( $item['ID'] ) ) ) : esc_url( add_query_arg( 'broken-link', $item['link'], $this->get_page_url( $item['ID'] ) ) ),
 					__( 'Find', 'wpblc-broken-links-checker' )
 				),
 				'mark-as-fixed' => sprintf(
 					'<a id="wpblc-mark-as-fixed" class="wpblc-mark-as-fixed %s" data-link="%s" data-post-id="%s" href="#">%s</a>',
 					esc_attr( $item['marked_fixed'] ),
 					esc_attr( $item['link'] ),
-					esc_attr( $item['post_id'] ),
+					esc_attr( $item['ID'] ),
 					'fixed' === $item['marked_fixed'] ? __( 'Mark as Broken', 'wpblc-broken-links-checker' ) : __( 'Mark as Fixed', 'wpblc-broken-links-checker' )
 				),
 			);
@@ -352,19 +356,24 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 * @return string
 		 */
 		public function column_post_type( $item ) {
-			$post_id = $item['post_id'];
-			$post_type = get_post_type( $post_id );
+			$id = $item['ID'];
 
-			return $post_type;
+			if ( $item['is_comment'] ) {
+				return __( 'Comment', 'wpblc-broken-links-checker' );
+			}
+			return get_post_type( $id );
 		}
 
 		/**
 		 * 
 		 */
 		private function get_post_or_comment_title( $item ) {
-			$post_id = $item['post_id'];
+			$id = $item['ID'];
 
-			return get_the_title( $post_id );
+			if ( $item['is_comment'] ) {
+				return get_comment_author( $id );
+			}
+			return get_the_title( $id );
 		}
 
 		/**
