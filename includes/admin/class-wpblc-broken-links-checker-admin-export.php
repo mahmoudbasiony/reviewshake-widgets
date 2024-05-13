@@ -81,7 +81,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Export' ) ) :
 			
 					// Output rows
 					foreach ($broken_links as $key => $link) {
-						fputcsv($fh, array($link['link'], $link['type'], $link['code'], $link['text'], $link['ID'], 'post', $link['detected_at']));
+						fputcsv($fh, array($link['link'], $link['type'], $link['code'], $link['text'], $link['ID'], wpblc_get_post_or_comment_type( $link ), $link['detected_at']));
 					}
 
 					// Close the output stream

@@ -11,14 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $broken_links_table = new WPBLC_Broken_Links_Checker_Admin_Links_List_Table();
-
-
-if ( isset( $_GET['s'] ) ) {
-	$broken_links_table->prepare_items( $_GET['s'] );
-} else {
-	$broken_links_table->prepare_items();
-}
-
+$broken_links_table->prepare_items();
 
 ?>
 

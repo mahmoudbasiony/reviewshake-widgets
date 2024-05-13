@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<input type="hidden" name="action" value="wpblc_export_csv"/>
 		<input type="hidden" name="nonce"
 			value="<?php echo esc_attr( wp_create_nonce( 'wpblc_export_csv_nonce' ) ); ?>"/>
-		<input type="submit" name="download" id="moblc_download" class="button button-primary"
+		<input type="submit" name="download" id="wpblc_download" class="button button-primary"
 			value="<?php esc_html_e( 'Export Report in CSV', 'wpblc-broken-links-checker' ); ?>"/>
 	</form>
 </div>

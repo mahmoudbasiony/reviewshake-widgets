@@ -285,17 +285,17 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			$actions = array(
 				'edit' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					$item['is_comment'] ? esc_url( get_edit_comment_link( $item['ID'] ) ) : esc_url( get_edit_post_link( $item['ID'] ) ),
+					esc_url( wpblc_get_post_or_comment_edit_link( $item ) ),
 					__( 'Edit', 'wpblc-broken-links-checker' )
 				),
 				'view' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					$item['is_comment'] ? esc_url( get_comment_link( $item['ID'] ) ) : esc_url( $this->get_page_url( $item['ID'] ) ),
+					esc_url( wpblc_get_post_or_comment_link( $item ) ),
 					__( 'View', 'wpblc-broken-links-checker' )
 				),
 			);
 
-			return sprintf( '<strong><a href="%1$s" target="_blank">%2$s</a></strong> %3$s', $item['is_comment'] ? esc_url( get_comment_link( $item['ID'] ) ) : esc_url( get_permalink( $item['ID'] ) ), $this->get_post_or_comment_title($item), $this->row_actions( $actions ) );
+			return sprintf( '<strong><a href="%1$s" target="_blank">%2$s</a></strong> %3$s', wpblc_get_post_or_comment_link($item), wpblc_get_post_or_comment_title($item), $this->row_actions( $actions ) );
 		}
 
 		/**
@@ -311,12 +311,12 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			$actions = array(
 				'edit' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					$item['is_comment'] ? esc_url( get_edit_comment_link( $item['ID'] ) ) :esc_url( get_edit_post_link( $item['ID'] ) ),
+					esc_url( wpblc_get_post_or_comment_edit_link( $item ) ),
 					__( 'Edit', 'wpblc-broken-links-checker' )
 				),
 				'find' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
-					$item['is_comment'] ? esc_url( add_query_arg( 'broken-link', $item['link'], get_comment_link( $item['ID'] ) ) ) : esc_url( add_query_arg( 'broken-link', $item['link'], $this->get_page_url( $item['ID'] ) ) ),
+					esc_url( add_query_arg( 'broken-link', $item['link'], wpblc_get_post_or_comment_link( $item ) ) ),
 					__( 'Find', 'wpblc-broken-links-checker' )
 				),
 				'mark-as-fixed' => sprintf(
@@ -356,33 +356,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 * @return string
 		 */
 		public function column_post_type( $item ) {
-			$id = $item['ID'];
-
-			if ( $item['is_comment'] ) {
-				return __( 'Comment', 'wpblc-broken-links-checker' );
-			}
-			return get_post_type( $id );
+			return wpblc_get_post_or_comment_type($item);
 		}
-
-		/**
-		 * 
-		 */
-		private function get_post_or_comment_title( $item ) {
-			$id = $item['ID'];
-
-			if ( $item['is_comment'] ) {
-				return get_comment_author( $id );
-			}
-			return get_the_title( $id );
-		}
-
-		/**
-		 * 
-		 */
-		private function get_page_url( $post_id ) {
-			return get_permalink( $post_id );
-		}
-
 
 		/**
 		 * Renders the status column.
