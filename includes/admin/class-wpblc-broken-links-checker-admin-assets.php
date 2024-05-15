@@ -3,7 +3,7 @@
  * The WPBLC_Broken_Links_Checker_Admin_Assets class.
  *
  * @package WPBLC_Broken_Links_Checker/Admin
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,8 +35,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Assets' ) ) :
 		/**
 		 * Enqueues admin scripts.
 		 *
-		 * @since   1.0.0
-		 * @version 2.0.0
+		 * @since 1.0.0
 		 *
 		 * @return void
 		 */
@@ -60,8 +59,9 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Assets' ) ) :
 				'wpblc_broken_links_checker_admin_scripts',
 				'wpblc_broken_links_checker_params',
 				array(
-					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'ajaxUrl' => esc_url( admin_url( 'admin-ajax.php' ) ),
 					'nonce'    => wp_create_nonce( 'wpblc_broken_links_checker' ),
+					'scanPageUrl' => esc_url( admin_url( 'admin.php?page=wpblc-broken-links-checker&tab=scan' ) ),
 				)
 			);
 		}
@@ -70,7 +70,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Assets' ) ) :
 		 * Enqueues admin styles.
 		 *
 		 * @since   1.0.0
-		 * @version 1.1.0
 		 *
 		 * @return void
 		 */

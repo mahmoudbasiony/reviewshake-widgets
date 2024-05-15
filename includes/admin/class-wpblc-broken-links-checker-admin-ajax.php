@@ -17,7 +17,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 	 *
 	 * Calls admin Ajax.
 	 *
-	 * @since   1.0.0
+	 * @since 1.0.0
 	 */
 	class WPBLC_Broken_Links_Checker_Admin_Ajax {
 		/**
@@ -47,7 +47,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 			}
 
 			if ( isset( $_POST ) && isset( $_POST['action'] ) && 'wpblc_broken_links_manual_scan' === $_POST['action'] ) {
-				$scan = WPBLC_Broken_Links_Checker_Utilities::get_content_to_scan( array( 'post', 'page' ) );
+				// Run the scan.
+				WPBLC_Broken_Links_Checker_Utilities::process_scan();
 
 				// Create a new instance of the table class
 				$broken_links_table = new WPBLC_Broken_Links_Checker_Admin_Links_List_Table();
@@ -55,7 +56,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 
 				// Capture the output of the display method
 				ob_start();
-				echo '<form method="get">';
+				echo '<form method="get" action="http://localhost:8888/ilias/wp-admin/admin.php?page=wpblc-broken-links-checker&tab=scan">';
 				$broken_links_table->display();
 				echo '</form>';
 				$table_html = ob_get_clean();

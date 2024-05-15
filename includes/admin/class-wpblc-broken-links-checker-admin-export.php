@@ -3,7 +3,7 @@
  * The WPBLC_Broken_Links_Checker_Admin_Export class.
  *
  * @package WPBLC_Broken_Links_Checker/Admin
- * @author  
+ * @author  Ilias Chelidonis
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Export' ) ) :
-	
+
 	/**
 	 * Admin report.
 	 *
@@ -20,7 +20,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Export' ) ) :
 	 * @since 1.0.0
 	 */
 	class WPBLC_Broken_Links_Checker_Admin_Export {
-
 		/**
 		 * The constructor.
 		 *
@@ -49,14 +48,14 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Export' ) ) :
 					if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'wpblc_export_csv_nonce' ) ) {
 						wp_die( esc_html__( 'Cheatin&#8217; huh?', 'wpblc-broken-links-checer' ) );
 					}
-		
+
 					// Check if the current user can manage options.
 					if ( ! current_user_can( 'manage_options' ) ) {
 						wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpblc-broken-links-checer' ) );
 					}
 
 					$generated_date = gmdate( 'd-m-Y His' );
-		
+
 					// Get the broken links.
 					$links = get_option( 'wpblc_broken_links_checker_links', array() );
 					$broken_links = isset($links['broken']) ? $links['broken'] : array();
@@ -72,13 +71,13 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Export' ) ) :
 						. '.csv";'
 					);
 					header( 'Content-Transfer-Encoding: binary' );
-			
+
 					// Open the output stream
 					$fh = @fopen('php://output', 'w');
-			
+
 					// Output column headers
 					fputcsv($fh, array('Link', 'Status', 'Code', 'Message', 'SourceId', 'SourcePostType', 'Date'));
-			
+
 					// Output rows
 					foreach ($broken_links as $key => $link) {
 						fputcsv($fh, array($link['link'], $link['type'], $link['code'], $link['text'], $link['ID'], wpblc_get_post_or_comment_type( $link ), $link['detected_at']));

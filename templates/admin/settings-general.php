@@ -5,7 +5,7 @@
  * @var array $settings - The plugin settings array
  *
  * @package WPBLC_Broken_Links_Checker/Templates/Admin
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,12 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings = get_option( 'wpblc_broken_links_checker_settings', array() );
 ?>
 
-    <div class="wpblc-broken-links-checker-general wrap">
-        <form action="options.php" method="post">
-            <?php
-            settings_fields('wpblc_broken_links_checker_settings');
-            do_settings_sections('wpblc-broken-links-checker');
-            submit_button('Save Settings');
-            ?>
-        </form>
-    </div>
+	<div class="wpblc-broken-links-checker-general wrap">
+		<form action="options.php" method="post">
+			<?php
+			settings_fields('wpblc_broken_links_checker_settings');
+			do_settings_sections('wpblc-broken-links-checker');
+			submit_button('Save Settings');
+			?>
+		</form>
+	</div>

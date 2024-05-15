@@ -1,11 +1,11 @@
 {
     "name": "wpblc-broken-links-checker",
     "version": "1.0.0",
-    "description": "",
-    "author": "",
+    "description": "Schedule automated scans to detect broken links on your WordPress site, view results in an intuitive table, and receive email notifications for swift resolution.",
+    "author": "Ilias Chelidonis, Mahmoud Basiony",
     "repository": {
         "type": "git",
-        "url": ""
+        "url": "https://github.com/mahmoudbasiony/wp-broken-links-checker"
     },
     "keywords": [
         "wordpress",

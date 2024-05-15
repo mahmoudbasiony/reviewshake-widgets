@@ -3,24 +3,25 @@
  * Some helper core functions.
  *
  * @package WPBLC_Broken_Links_Checker
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-
 if ( version_compare( PHP_VERSION, 8.0, '<=' ) && !function_exists( 'str_starts_with' ) ) {
     function str_starts_with ( $haystack, $needle ) {
         return strpos( $haystack , $needle ) === 0;
     }
 }
+
 if ( version_compare( PHP_VERSION, 8.0, '<=' ) && !function_exists( 'str_ends_with' ) ) {
     function str_ends_with( $haystack, $needle ) {
         return $needle !== '' && substr( $haystack, -strlen( $needle ) ) === (string)$needle;
     }
-} 
+}
+
 if ( version_compare( PHP_VERSION, 8.0, '<=' ) && !function_exists( 'str_contains' ) ) {
     function str_contains( $haystack, $needle ) {
         return $needle !== '' && mb_strpos( $haystack, $needle ) !== false;
@@ -50,7 +51,6 @@ if ( ! function_exists( 'wpblc_get_option' ) ) {
 }
 
 if ( ! function_exists( 'wpblc_get_post_or_comment_title' ) ) {
-
     /**
      * Get the post or comment title.
      *
@@ -72,11 +72,9 @@ if ( ! function_exists( 'wpblc_get_post_or_comment_title' ) ) {
         }
         return get_the_title( $id );
     }
-    
 }
 
 if ( ! function_exists( 'wpblc_get_post_or_comment_link' ) ) {
-
     /**
      * Get the post or comment link.
      *
@@ -101,7 +99,6 @@ if ( ! function_exists( 'wpblc_get_post_or_comment_link' ) ) {
 }
 
 if ( ! function_exists( 'wpblc_get_post_or_comment_edit_link' ) ) {
-
     /**
      * Get the post or comment edit link.
      *
@@ -126,7 +123,6 @@ if ( ! function_exists( 'wpblc_get_post_or_comment_edit_link' ) ) {
 }
 
 if ( ! function_exists( 'wpblc_get_post_or_comment_type' ) ) {
-
     /**
      * Get the post or comment type.
      *
@@ -148,3 +144,40 @@ if ( ! function_exists( 'wpblc_get_post_or_comment_type' ) ) {
     }
 }
 
+if ( ! function_exists( 'wpblc_convert_timezone' ) ) {
+    /**
+     * Convert timezone
+     * 
+     * @param string $date
+     * @param string $format
+     * @param string $timezone
+     *
+     * @since 1.0.0
+     *
+     * @return string
+     */
+    function wpblc_convert_timezone( $date = null, $format = 'F j, Y g:i A', $timezone = null ) {
+        // Get today as default
+        if ( is_null( $date ) ) {
+            $date = gmdate( 'Y-m-d H:i:s' );
+        }
+
+        // Get the date in UTC time
+        $date = new DateTime( $date, new DateTimeZone( 'UTC' ) );
+
+        // Get the timezone string
+        if ( !is_null( $timezone ) ) {
+            $timezone_string = $timezone;
+        } else {
+            $timezone_string = wp_timezone_string();
+        }
+
+        // Set the timezone to the new one
+        $date->setTimezone( new DateTimeZone( $timezone_string ) );
+
+        // Format it the way we way
+        $new_date = $date->format( $format );
+
+        return $new_date;
+    }
+}

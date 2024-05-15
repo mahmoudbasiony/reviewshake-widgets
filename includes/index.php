@@ -2,7 +2,7 @@
 /**
  * Silence is golden.
  *
- * @package
+ * @package WPBLC_Broken_Links_Checker
  */
 
 echo null;

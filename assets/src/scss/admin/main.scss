@@ -1,10 +1,13 @@
 // Backend styles.
+
+//###### General Settings ######//
 .wpblc-broken-links-checker-general {
 	#email_addresses {
 		width: 700px;
 	}
 }
 
+//###### Scan ######//
 .wpblc-broken-links-checker-scan {
 
 	.wpblc-broken-links-checker-scan-wrap {
@@ -16,7 +19,7 @@
 			.column-code {
 				width : 13%;
 			}
-			.column-title {
+			.column-source {
 				width: 13%;
 			}
 			.column-post_type {
@@ -43,15 +46,15 @@
 					border: 1px solid rgba(7, 36, 86, 0.075);
 					border-radius: 10px;
 				}
-	
+
 				.status-type.not-fixed {
 					background: red;
 				}
-	
+
 				.status-type.fixed {
 					background: green;
 				}
-	
+
 				.message {
 					display: block;
 					font-size: 12px;
@@ -61,11 +64,20 @@
 
 		}
 
+		.wpblc_export_csv_wrap {
+			margin-top: 30px;
+
+			#wpblc_export_csv_form {
+				display: flex;
+				justify-content: end;
+			}
+		}
+
 		.wpblc_none {
 			display: none;
-	
+
 			.wpblc_success_div {
-	
+
 				padding: 15px;
 				color: #155724;
 				background-color: #d4edda;

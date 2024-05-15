@@ -3,10 +3,8 @@
  * Settings.
  *
  * @package WPBLC_Broken_Links_Checker/Templates/Admin
- * @author  Reviewshake
+ * @author  Ilias Chelidonis.
  */
-
-
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.

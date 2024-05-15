@@ -3,7 +3,7 @@
  * The WPBLC_Broken_Links_Checker_Admin_Notices class.
  *
  * @package WPBLC_Broken_Links_Checker/Admin
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -51,8 +51,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Notices' ) ) :
 		 */
 		public function add_admin_notice( $slug, $class, $message, $dismissible = false ) {
 			$this->notices[ $slug ] = array(
-				'class'       => $class,
-				'message'     => $message,
+				'class'       => esc_attr( $class ),
+				'message'     => esc_html( $message ),
 				'dismissible' => $dismissible,
 			);
 		}

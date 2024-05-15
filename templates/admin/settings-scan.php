@@ -3,7 +3,7 @@
  * Settings - Scan.
  *
  * @package WPBLC_Broken_Links_Checker/Templates/Admin
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

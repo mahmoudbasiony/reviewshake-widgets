@@ -24,5 +24,5 @@ if ( defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	 * Delete plugin options.
 	 */
 	delete_option( 'wpblc_broken_links_checker_settings' );
-	delete_option( 'wpblc_broken_links_checker_db_version' );
+	delete_option( 'wpblc_broken_links_checker_links' );
 }

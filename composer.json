@@ -1,7 +1,7 @@
 {
 	"name": "wpblc-broken-links-checker/wpblc-broken-links-checker",
 	"type": "wordpress-plugin",
-	"description": "",
+	"description": "Schedule automated scans to detect broken links on your WordPress site, view results in an intuitive table, and receive email notifications for swift resolution.",
 	"homepage": "https://github.com/mahmoudbasiony/wpblc-broken-links-checker",
 	"license": "GPL-3.0-or-later",
 	"require": {

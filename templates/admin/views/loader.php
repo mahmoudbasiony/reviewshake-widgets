@@ -3,7 +3,7 @@
  * Settings - Admin - Views.
  *
  * @package WPBLC_Broken_Links_Checker/Templates/Admin/Views
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

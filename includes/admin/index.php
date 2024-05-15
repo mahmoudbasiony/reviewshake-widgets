@@ -2,7 +2,8 @@
 /**
  * Silence is golden.
  *
- * @package
+ * @package WPBLC_Broken_Links_Checker
+ * @author Ilias Chelidonis.
  */
 
 echo null;

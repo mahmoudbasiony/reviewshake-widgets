@@ -11,77 +11,87 @@
 	 * Get app state and continue creating the account.
 	 */
 	$(document).ready(function(){
-		// if ( ! $('#email_notifications').is(':checked') ) {
-		// 	$('#email_addresses').closest('tr').css('display', 'none');
-		// }
-
-		// $('#email_notifications').change(function() {
-		// 	console.log(this.checked);
-		// 	let display = this.checked ? '' : 'none';
-		// 	$('#email_addresses').css('display', display).closest('tr').css('display', display);
-		// });
-		
+		// Disable the email addresses` field if enable email notifications is unchecked.
 		$('#email_notifications').change(function() {
 			$('#email_addresses').prop('disabled', ! $(this).is(':checked'));
 		});
 
+		// Disable the number field if number of links to scan is set to all.
 		$('#all_links, #set_number').change(function() {
 			$('#number_of_links').prop('disabled', $('#all_links').is(':checked'));
 		});
 	});
 
-	// $(document).ready(function() {
-	// 	$('#wpblc-manual-scan').on('click', function(event) {
-	// 		event.preventDefault();
-
-			
-	// 	});
-	// });
-
-	let nonce = wpblc_broken_links_checker_params.nonce;
-	let ajaxurl = wpblc_broken_links_checker_params.ajaxurl;
-
+	/**
+	 * On click of the manual scan button, start the manual scan.
+	 */
 	$(document).on('click', '#wpblc-manual-scan', function(event) {
 		event.preventDefault();
 		console.log('Manual scan started...');
 
-		var nonce = wpblc_broken_links_checker_params.nonce;
-		var ajaxurl = wpblc_broken_links_checker_params.ajaxurl;
+		let nonce = wpblc_broken_links_checker_params.nonce;
 
 		let data = {
 			action: 'wpblc_broken_links_manual_scan',
+			scan_page_url: wpblc_broken_links_checker_params.scanPageUrl,
 			nonce: nonce,
 		};
 
+		// Call the manual scan function.
 		manualScan(data).then(result => {
 			console.log(result);
+
+			// Validate the AJAX response
+			if (typeof result === 'object' && result.hasOwnProperty('success') && result.success) {
+				// Check if result.data is a string before using it as HTML
+				if (typeof result.data === 'string') {
+					// Replace the table's HTML with the new HTML
+					$('.wpblc-broken-links-checker-links-table').html(result.data);
+					$('.wpblc_export_csv_wrap').show();
+
+					// Modify the pagination URLs
+					$('.wpblc-broken-links-checker-links-table .tablenav-pages a').each(function() {
+						var oldUrl = new URL($(this).attr('href'));
+						var paged = oldUrl.searchParams.get('paged');
+			
+						var newUrl = new URL(wpblc_broken_links_checker_params.scanPageUrl);
+						newUrl.searchParams.set('paged', paged);
+			
+						$(this).attr('href', newUrl.toString());
+					});
+				} else {
+					console.error('Error: Unexpected AJAX response', result);
+				}
+			} else {
+				console.error('Error: AJAX request failed', result);
+			}
 		});
 	});
 
+	/**
+	 * On click of the mark as fixed button, mark the link as fixed.
+	 */
 	$(document).on('click', '#wpblc-mark-as-fixed.not-fixed', function(event) {
 		event.preventDefault();
 		console.log('Mark as fixed started...');
 
-		var nonce = wpblc_broken_links_checker_params.nonce;
-		var currentEl = $(this);
-		var link = currentEl.data('link');
-		var postId = currentEl.data('post-id');
+		let nonce = wpblc_broken_links_checker_params.nonce;
+		let currentEl = $(this);
+		let link = currentEl.data('link');
+		let postId = currentEl.data('post-id');
 
 		let data = {
 			action: 'wpblc_broken_links_mark_as_fixed',
 			nonce: nonce,
 			link: link,
 			postId: postId,
-			
 		};
 
+		// Call the mark as fixed function.
 		markAsFixed(data).then(result => {
 			console.log(result);
-
 			if (typeof result === 'object' && result.hasOwnProperty('success') && result.success) {
-				if ( typeof result.data === 'boolean' && result.data ) { // Correct typo in 'boolean'
-					currentEl.attr( 'title', 'Mark as Broken' );
-
+				if ( typeof result.data === 'boolean' && result.data ) {
 					if (currentEl.hasClass('fixed')) {
 						currentEl.removeClass('fixed').addClass('not-fixed').html('Mark as Fixed');
 						currentEl.closest('tr').find('.column-type .status-type').removeClass('fixed').addClass('not-fixed').html('Broken');
@@ -94,23 +104,26 @@
 		});
 	});
 
+	/**
+	 * On click of the mark as broken button, mark the link as broken.
+	 */
 	$(document).on('click', '#wpblc-mark-as-fixed.fixed', function(event) {
 		event.preventDefault();
 		console.log('Mark as broken started...');
 
-		var nonce = wpblc_broken_links_checker_params.nonce;
-		var currentEl = $(this);
-		var link = currentEl.data('link');
-		var postId = currentEl.data('post-id');
+		let nonce = wpblc_broken_links_checker_params.nonce;
+		let currentEl = $(this);
+		let link = currentEl.data('link');
+		let postId = currentEl.data('post-id');
 
 		let data = {
 			action: 'wpblc_broken_links_mark_as_broken',
 			nonce: nonce,
 			link: link,
 			postId: postId,
-			
 		};
 
+		// Call the mark as broken function.
 		markAsBroken(data).then(result => {
 			console.log(result);
 
@@ -130,6 +143,12 @@
 	});
 
 
+	/**
+	 * Mark a link as broken.
+	 *
+	 * @param {object} data 
+	 * @returns 
+	 */
 	const markAsBroken = async(data) => {
 		let result;
 
@@ -139,21 +158,12 @@
 				type: 'POST',
 				data: data,
 				beforeSend: function() {
-					console.log('Sending data...');
-					loader('show');
+					console.log('Before mark links as broken');
 				},
 				complete: function() {
-					console.log('Data sent.');
-					loader('hide');
+					console.log('Complete');
 				}
 			});
-
-			// Validate the AJAX response
-			if (typeof result === 'object' && result.hasOwnProperty('success') && result.success) {
-				
-			} else {
-				console.error('Error: AJAX request failed', result);
-			}
 
 			return result;
 		} catch (error) {
@@ -161,7 +171,12 @@
 		}
 	};
 
-	
+	/**
+	 * Manually scan for broken links.
+	 *
+	 * @param {object} data 
+	 * @returns 
+	 */
 	const manualScan = async(data) => {
 		let result;
 
@@ -174,6 +189,7 @@
 					console.log('Sending data...');
 					loader('show');
 					$('.wpblc-broken-links-checker-links-table').html('');
+					$('.wpblc_export_csv_wrap').hide();
 				},
 				complete: function() {
 					console.log('Data sent.');
@@ -181,25 +197,18 @@
 				}
 			});
 
-			// Validate the AJAX response
-			if (typeof result === 'object' && result.hasOwnProperty('success') && result.success) {
-				// Check if result.data is a string before using it as HTML
-				if (typeof result.data === 'string') {
-					// Replace the table's HTML with the new HTML
-					$('.wpblc-broken-links-checker-links-table').html(result.data);
-				} else {
-					console.error('Error: Unexpected AJAX response', result);
-				}
-			} else {
-				console.error('Error: AJAX request failed', result);
-			}
-
 			return result;
 		} catch (error) {
 			console.error('Error:', error.statusText);
 		}
 	};
 
+	/**
+	 * Mark a link as fixed.
+	 *
+	 * @param {object} data 
+	 * @returns 
+	 */
 	const markAsFixed = async(data) => {
 		let result;
 
@@ -209,21 +218,12 @@
 				type: 'POST',
 				data: data,
 				beforeSend: function() {
-					console.log('Sending data...');
-					loader('show');
+					console.log('Before mark links as broken');
 				},
 				complete: function() {
-					console.log('Data sent.');
-					loader('hide');
+					console.log('Complete.');
 				}
 			});
-
-			// Validate the AJAX response
-			if (typeof result === 'object' && result.hasOwnProperty('success') && result.success) {
-				
-			} else {
-				console.error('Error: AJAX request failed', result);
-			}
 
 			return result;
 		} catch (error) {
@@ -231,6 +231,11 @@
 		}
 	};
 
+	/**
+	 * Hide/show the loader.
+	 *
+	 * @param {string} action 
+	 */
 	const loader = (action) => {
 		let loader = $('.wpblc-is-scanning');
 		if (action === 'show') {
@@ -239,23 +244,5 @@
 			loader.hide();
 		}
 	};
-
-	
-	
-	// $(document).ready(function() {
-    //     // Hide the number field if "All" is selected when the page loads
-    //     if ($('#all_links').is(':checked')) {
-    //         $('#number_of_links').closest('tr').hide();
-    //     }
-
-    //     // Show/hide the number field when the selected option changes
-    //     $('#all_links, #set_number').change(function() {
-    //         if ($('#all_links').is(':checked')) {
-    //             $('#number_of_links').hide();
-    //         } else {
-    //             $('#number_of_links').show();
-    //         }
-    //     });
-    // });
 
 } )( jQuery );

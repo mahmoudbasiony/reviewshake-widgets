@@ -1,9 +1,9 @@
 <?php
 /**
- * The WPBLC_Broken_Links_Checker_Admin_Links_List_Table.php class.
+ * The WPBLC_Broken_Links_Checker_Admin_Links_List_Table class.
  *
  * @package WPBLC_Broken_Links_Checker/Admin
- * @author
+ * @author Ilias Chelidonis.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -87,7 +87,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 				'per_page'    => $per_page
 			]);
 
-
 			$this->items = $this->get_links($per_page, $current_page, $filter);
 		}
 
@@ -96,25 +95,19 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 *
 		 * @param int $per_page     Number of items to display per page.
 		 * @param int $page_number  Current page number.
-		 * @param string $type      Type of link.
-		 * @param string $status    Status of link.
-		 * @param string $location  Location of link.
+		 * @param array $filter     The filter to apply.
+		 *
+		 * @since 1.0.0
 		 *
 		 * @return array
 		 */
 		public function get_links($per_page = 5, $page_number = 1, $filter = []) {
+			// Get the links from the database.
 			$links = get_option( 'wpblc_broken_links_checker_links', [] );
 
 			$data = [];
-
-			if (isset($links['broken'])) {
-				// if ( ! empty( $location ) ) {
-				// 	$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $location ) {
-
-				// 		return get_post_type( $link['ID'] ) === $location;
-				// 	});
-				// }
-
+			if ( isset( $links['broken'] ) ) {
+				// Apply the filter to the array.
 				if ( ! empty( array_filter( $filter ) ) ) {
 					foreach ($filter as $key => $value) {
 						if ( '' !== $value ) {
@@ -136,7 +129,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 										if ( $link['is_comment'] ) {
 											return 'comment' === $value;
 										}
-			
+
 										return get_post_type( $link['ID'] ) === $value;
 									});
 								break;
@@ -149,9 +142,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 					}
 				}
 
-				// var_dump($links['broken']);
-				// var_dump($filter);
-				// var_dump($_REQUEST['wpblc_location_filter']);
 				// Apply pagination to the array.
 				$data = array_slice($links['broken'], (($page_number - 1) * $per_page), $per_page);
 			}
@@ -178,8 +168,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 
 			foreach ($filter as $key => $value) {
 				if ( '' !== $value ) {
-					//var_dump($key, $value);
-
 					switch ($key) {
 						case 'type':
 							$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
@@ -199,7 +187,11 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 
 						case 'location':
 							$links['broken'] = array_filter( $links['broken'], function( $link ) use ( $value ) {
-								return $link['is_comment'] ? __( 'Comments', 'wpblc-broken-links-checker' ) : get_post_type( $link['ID'] ) === $value;
+								if ($link['is_comment']) {
+									return $value === esc_html__( 'Comments', 'wpblc-broken-links-checker' );
+								} else {
+									return get_post_type( $link['ID'] ) === $value;
+								}
 							});
 
 							return isset($links['broken']) ? count($links['broken']) : 0;
@@ -209,10 +201,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 							return isset($links['broken']) ? count($links['broken']) : 0;
 						break;
 					}
-
-					// $links['broken'] = array_filter( $links['broken'], function( $link ) use ( $key, $value ) {
-					// 	return $link[$key] === $value;
-					// });
 				}
 			}
 		}
@@ -226,12 +214,12 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 */
 		public function get_columns() {
 			return array(
-				'link' => __( 'Link', 'wpblc-broken-links-checker' ),
-				'type' => __( 'Status', 'wpblc-broken-links-checker' ),
-				'code' => __( 'Response', 'wpblc-broken-links-checker' ),
-				'title' => __( 'Source', 'wpblc-broken-links-checker' ),
-				'post_type' => __( 'Post Type', 'wpblc-broken-links-checker' ),
-				'detected_at' => __( 'Date', 'wpblc_broken_links_checker' ),
+				'link' => esc_html__( 'Link', 'wpblc-broken-links-checker' ),
+				'type' => esc_html__( 'Status', 'wpblc-broken-links-checker' ),
+				'code' => esc_html__( 'Response', 'wpblc-broken-links-checker' ),
+				'source' => esc_html__( 'Source', 'wpblc-broken-links-checker' ),
+				'post_type' => esc_html__( 'Post Type', 'wpblc-broken-links-checker' ),
+				'detected_at' => esc_html__( 'Date', 'wpblc_broken_links_checker' ),
 			);
 		}
 
@@ -259,7 +247,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		public function column_default( $item, $column_name ) {
 			switch ( $column_name ) {
 				case 'type':
-				case 'title':
+				case 'source':
 				case 'post_type':
 				case 'code':
 				case 'text':
@@ -273,7 +261,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		}
 
 		/**
-		 * Renders the title column.
+		 * Renders the source column.
 		 *
 		 * @since 1.0.0
 		 *
@@ -281,17 +269,17 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 *
 		 * @return string
 		 */
-		public function column_title( $item ) {
+		public function column_source( $item ) {
 			$actions = array(
 				'edit' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
 					esc_url( wpblc_get_post_or_comment_edit_link( $item ) ),
-					__( 'Edit', 'wpblc-broken-links-checker' )
+					esc_html__( 'Edit', 'wpblc-broken-links-checker' )
 				),
 				'view' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
 					esc_url( wpblc_get_post_or_comment_link( $item ) ),
-					__( 'View', 'wpblc-broken-links-checker' )
+					esc_html__( 'View', 'wpblc-broken-links-checker' )
 				),
 			);
 
@@ -299,7 +287,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		}
 
 		/**
-		 * Renders the URL column.
+		 * Renders the link column.
 		 *
 		 * @since 1.0.0
 		 *
@@ -312,19 +300,19 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 				'edit' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
 					esc_url( wpblc_get_post_or_comment_edit_link( $item ) ),
-					__( 'Edit', 'wpblc-broken-links-checker' )
+					esc_html__( 'Edit', 'wpblc-broken-links-checker' )
 				),
 				'find' => sprintf(
 					'<a href="%s" target="_blank">%s</a>',
 					esc_url( add_query_arg( 'broken-link', $item['link'], wpblc_get_post_or_comment_link( $item ) ) ),
-					__( 'Find', 'wpblc-broken-links-checker' )
+					esc_html__( 'Find', 'wpblc-broken-links-checker' )
 				),
 				'mark-as-fixed' => sprintf(
 					'<a id="wpblc-mark-as-fixed" class="wpblc-mark-as-fixed %s" data-link="%s" data-post-id="%s" href="#">%s</a>',
 					esc_attr( $item['marked_fixed'] ),
 					esc_attr( $item['link'] ),
 					esc_attr( $item['ID'] ),
-					'fixed' === $item['marked_fixed'] ? __( 'Mark as Broken', 'wpblc-broken-links-checker' ) : __( 'Mark as Fixed', 'wpblc-broken-links-checker' )
+					'fixed' === $item['marked_fixed'] ? esc_html__( 'Mark as Broken', 'wpblc-broken-links-checker' ) : esc_html__( 'Mark as Fixed', 'wpblc-broken-links-checker' )
 				),
 			);
 
@@ -341,10 +329,9 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 * @return string
 		 */
 		public function column_type( $item ) {
-			$title = 'fixed' === $item['marked_fixed'] ? __( 'Fixed', 'wpblc-broken-links-checker' ) : $item['type'];
+			$title = 'fixed' === $item['marked_fixed'] ? esc_html__( 'Fixed', 'wpblc-broken-links-checker' ) : $item['type'];
 			return sprintf( '<div class="status-type %1$s">%2$s</div>', esc_attr( $item['marked_fixed'] ), ucwords( $title ) );
 		}
-	
 
 		/**
 		 * Renders the post type column.
@@ -356,7 +343,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		 * @return string
 		 */
 		public function column_post_type( $item ) {
-			return wpblc_get_post_or_comment_type($item);
+			return wpblc_get_post_or_comment_type( $item );
 		}
 
 		/**
@@ -373,7 +360,13 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 		}
 
 		/**
-		 * 
+		 * Renders the filter dropdown form.
+		 *
+		 * @param string $which The current navigation position.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @return string
 		 */
 		public function extra_tablenav( $which ) {
 			if ( 'top' === $which ) {
@@ -404,12 +397,13 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 
 						<input type="hidden" name="page" value="wpblc-broken-links-checker">
 						<input type="hidden" name="tab" value="scan">
+
 						<?php submit_button('Filter', 'button', 'filter_action', false); ?>
 					</div>
-
 				<?php
 			}
 		}
+
 		/**
 		 * Renders the table navigation.
 		 *
@@ -428,7 +422,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 			echo '<br class="clear" />';
 			echo '</div>';
 		}
-
 	}
 
 endif;
