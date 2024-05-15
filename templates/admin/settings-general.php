@@ -19,9 +19,9 @@ $settings = get_option( 'wpblc_broken_links_checker_settings', array() );
 	<div class="wpblc-broken-links-checker-general wrap">
 		<form action="options.php" method="post">
 			<?php
-			settings_fields('wpblc_broken_links_checker_settings');
-			do_settings_sections('wpblc-broken-links-checker');
-			submit_button('Save Settings');
+			settings_fields( 'wpblc_broken_links_checker_settings' );
+			do_settings_sections( 'wpblc-broken-links-checker' );
+			submit_button( 'Save Settings' );
 			?>
 		</form>
 	</div>

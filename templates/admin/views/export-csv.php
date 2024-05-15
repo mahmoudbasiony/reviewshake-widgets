@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wpblc_export_csv_wrap">
-	<form name="wpblc_export_csv_form" class="wpblc_export_csv_form" id="wpblc_export_csv_form" action="<?php echo admin_url('admin.php?page=wpblc-broken-links-checker&tab=scan'); ?>" method="post">
+	<form name="wpblc_export_csv_form" class="wpblc_export_csv_form" id="wpblc_export_csv_form" action="<?php echo esc_url( admin_url( 'admin.php?page=wpblc-broken-links-checker&tab=scan' ) ); ?>" method="post">
 		<input type="hidden" name="action" value="wpblc_export_csv"/>
 		<input type="hidden" name="nonce"
 			value="<?php echo esc_attr( wp_create_nonce( 'wpblc_export_csv_nonce' ) ); ?>"/>

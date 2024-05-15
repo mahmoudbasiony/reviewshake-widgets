@@ -6,11 +6,11 @@
  * @author Ilias Chelidonis.
  */
 
- if ( ! defined( 'ABSPATH' ) ) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
 ?>
 
-<input type="checkbox" id="email_notifications" name="wpblc_broken_links_checker_settings[email_notifications]" <?php checked($email_notifications, 'on'); ?>>
-<label for="email_notifications"><?php esc_html_e( 'Enable email notifications', '' ); ?></label>
+<input type="checkbox" id="email_notifications" name="wpblc_broken_links_checker_settings[email_notifications]" <?php checked( $email_notifications, 'on' ); ?>>
+<label for="email_notifications"><?php esc_html_e( 'Enable email notifications', 'wpblc-broken-links-checker' ); ?></label>

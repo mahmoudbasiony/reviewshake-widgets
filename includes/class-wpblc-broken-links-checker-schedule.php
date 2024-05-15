@@ -95,7 +95,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Schedule' ) ) :
 		 *
 		 * @return void
 		 */
-		public function on_update_option( $option, $old_value, $new_value) {
+		public function on_update_option( $option, $old_value, $new_value ) {
 			if ( 'wpblc_broken_links_checker_settings' === $option && isset( $old_value['scan_frequency'] ) && isset( $new_value['scan_frequency'] ) ) {
 				if ( $old_value['scan_frequency'] !== $new_value['scan_frequency'] ) {
 					// Update the scan frequency.

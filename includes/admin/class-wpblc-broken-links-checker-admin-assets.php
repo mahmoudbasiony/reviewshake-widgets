@@ -59,8 +59,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Assets' ) ) :
 				'wpblc_broken_links_checker_admin_scripts',
 				'wpblc_broken_links_checker_params',
 				array(
-					'ajaxUrl' => esc_url( admin_url( 'admin-ajax.php' ) ),
-					'nonce'    => wp_create_nonce( 'wpblc_broken_links_checker' ),
+					'ajaxUrl'     => esc_url( admin_url( 'admin-ajax.php' ) ),
+					'nonce'       => wp_create_nonce( 'wpblc_broken_links_checker' ),
 					'scanPageUrl' => esc_url( admin_url( 'admin.php?page=wpblc-broken-links-checker&tab=scan' ) ),
 				)
 			);

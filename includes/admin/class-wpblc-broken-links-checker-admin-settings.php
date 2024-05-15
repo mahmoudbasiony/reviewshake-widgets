@@ -43,7 +43,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 			add_action( 'admin_init', array( $this, 'register_settings' ) );
 
 			// Filters.
-			add_filter( 'set-screen-option', array( $this, 'set_screen_option' ), 10, 3);
+			add_filter( 'set-screen-option', array( $this, 'set_screen_option' ), 10, 3 );
 		}
 
 		/**
@@ -60,7 +60,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 				'manage_options',
 				'wpblc-broken-links-checker',
 				array( $this, 'menu_page' ),
-				'dashicons-admin-comments'
+				'dashicons-editor-unlink'
 			);
 
 			add_action( "load-$hook", array( $this, 'screen_option' ) );
@@ -89,7 +89,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 			$args   = array(
 				'label'   => 'Links',
 				'default' => 10,
-				'option'  => 'links_per_page'
+				'option'  => 'links_per_page',
 			);
 
 			add_screen_option( $option, $args );
@@ -181,14 +181,16 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param string $status
-		 * @param string $option
-		 * @param int    $value
+		 * @param string $status The status.
+		 * @param string $option The option.
+		 * @param int    $value The value.
 		 *
 		 * @return int
 		 */
-		public function set_screen_option($status, $option, $value) {
-			if ('links_per_page' == $option) return $value;
+		public function set_screen_option( $status, $option, $value ) {
+			if ( 'links_per_page' == $option ) {
+				return $value;
+			}
 			return $status;
 		}
 
@@ -214,7 +216,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 		 */
 		public function settings_email_addresses() {
 			$email_notifications = isset( $this->settings['email_notifications'] ) ? $this->settings['email_notifications'] : '';
-			$email_addresses = isset($this->settings['email_addresses']) ? $this->settings['email_addresses'] : '';
+			$email_addresses     = isset( $this->settings['email_addresses'] ) ? $this->settings['email_addresses'] : '';
 
 			include_once WPBLC_BROKEN_LINKS_CHECKER_TEMPLATES_PATH . 'admin/views/sections/fields/email-addresses.php';
 		}
@@ -228,7 +230,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 		 */
 		public function settings_email_notifications() {
 			$email_notifications = isset( $this->settings['email_notifications'] ) ? $this->settings['email_notifications'] : '';
-			$email_addresses = isset($this->settings['email_addresses']) ? $this->settings['email_addresses'] : '';
+			$email_addresses     = isset( $this->settings['email_addresses'] ) ? $this->settings['email_addresses'] : '';
 
 			include_once WPBLC_BROKEN_LINKS_CHECKER_TEMPLATES_PATH . 'admin/views/sections/fields/email-notifications.php';
 		}
@@ -255,7 +257,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 		 */
 		public function settings_set_links_numbers() {
 			$number_of_links = isset( $this->settings['number_of_links'] ) ? $this->settings['number_of_links'] : 'all';
-			$set_number = isset( $this->settings['set_links_number'] ) ? $this->settings['set_links_number'] : '';
+			$set_number      = isset( $this->settings['set_links_number'] ) ? $this->settings['set_links_number'] : '';
 
 			include_once WPBLC_BROKEN_LINKS_CHECKER_TEMPLATES_PATH . 'admin/views/sections/fields/set-links-number.php';
 		}
@@ -268,7 +270,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Settings' ) ) :
 		 * @return void
 		 */
 		public function settings_scope_of_scan() {
-			$scope_of_scan = isset( $this->settings['scope_of_scan'] ) ? $this->settings['scope_of_scan'] : array('all');
+			$scope_of_scan = isset( $this->settings['scope_of_scan'] ) ? $this->settings['scope_of_scan'] : array( 'all' );
 
 			include_once WPBLC_BROKEN_LINKS_CHECKER_TEMPLATES_PATH . 'admin/views/sections/fields/scope-of-scan.php';
 		}

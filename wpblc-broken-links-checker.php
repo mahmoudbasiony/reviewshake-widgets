@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WP Broken Links Checker
- * Plugin URI: 
+ * Plugin URI:
  * Description: Schedule automated scans to detect broken links on your WordPress site, view results in an intuitive table, and receive email notifications for swift resolution.
  * Version: 1.0.0
  * Author: Ilias Chelidonis
@@ -145,7 +145,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker' ) ) :
 		 * @return void
 		 */
 		public static function activate() {
-			$settings = get_option( 'wpblc_broken_links_checker_settings', array() );
+			$settings  = get_option( 'wpblc_broken_links_checker_settings', array() );
 			$frequency = isset( $settings['scan_frequency'] ) ? $settings['scan_frequency'] : 'daily';
 
 			if ( ! wp_next_scheduled( 'wpblc_broken_links_checker_scheduled_event' ) ) {

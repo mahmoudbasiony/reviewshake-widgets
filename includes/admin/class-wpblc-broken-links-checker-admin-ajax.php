@@ -3,7 +3,7 @@
  * The WPBLC_Broken_Links_Checker_Admin_Ajax class.
  *
  * @package WPBLC_Broken_Links_Checker/Admin
- * @author  
+ * @author  Ilias Chelidonis
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -43,26 +43,26 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 		public function manual_scan() {
 			// Check for nonce security.
 			if ( ! wp_verify_nonce( $_POST['nonce'], 'wpblc_broken_links_checker' ) ) {
-				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'reviewshake-widgets' ) );
+				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'wpblc-broken-links-checker' ) );
 			}
 
 			if ( isset( $_POST ) && isset( $_POST['action'] ) && 'wpblc_broken_links_manual_scan' === $_POST['action'] ) {
 				// Run the scan.
 				WPBLC_Broken_Links_Checker_Utilities::process_scan();
 
-				// Create a new instance of the table class
+				// Create a new instance of the table class.
 				$broken_links_table = new WPBLC_Broken_Links_Checker_Admin_Links_List_Table();
 				$broken_links_table->prepare_items();
 
-				// Capture the output of the display method
+				// Capture the output of the display method.
 				ob_start();
-				echo '<form method="get" action="http://localhost:8888/ilias/wp-admin/admin.php?page=wpblc-broken-links-checker&tab=scan">';
+				echo '<form method="get">';
 				$broken_links_table->display();
 				echo '</form>';
 				$table_html = ob_get_clean();
-		
-				// Return the table HTML in the AJAX response
-				wp_send_json_success($table_html);
+
+				// Return the table HTML in the AJAX response.
+				wp_send_json_success( $table_html );
 			}
 
 			die();
@@ -78,22 +78,22 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 		public function mark_as_fixed() {
 			// Check for nonce security.
 			if ( ! wp_verify_nonce( $_POST['nonce'], 'wpblc_broken_links_checker' ) ) {
-				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'reviewshake-widgets' ) );
+				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'wpblc-broken-links-checker' ) );
 			}
 
 			if ( isset( $_POST ) && isset( $_POST['action'] ) && 'wpblc_broken_links_mark_as_fixed' === $_POST['action'] ) {
-				$link = isset( $_POST['link'] ) ? sanitize_text_field( $_POST['link'] ) : '';
+				$link    = isset( $_POST['link'] ) ? sanitize_text_field( $_POST['link'] ) : '';
 				$post_id = isset( $_POST['postId'] ) ? intval( $_POST['postId'] ) : 0;
 
 				$links = get_option( 'wpblc_broken_links_checker_links', array() );
 
 				if ( isset( $links ) && isset( $links['broken'] ) ) {
-					$links_column = array_column($links['broken'], 'link');
-					$position = array_search($link, $links_column);
+					$links_column = array_column( $links['broken'], 'link' );
+					$position     = array_search( $link, $links_column );
 
-					if ( $position !== false ) {
-						$links['broken'][$position]['marked_fixed'] = 'fixed';
-						$links['fixed'][] = $links['broken'][$position];
+					if ( false !== $position ) {
+						$links['broken'][ $position ]['marked_fixed'] = 'fixed';
+						$links['fixed'][]                             = $links['broken'][ $position ];
 					}
 				}
 
@@ -113,28 +113,28 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 		public function mark_as_broken() {
 			// Check for nonce security.
 			if ( ! wp_verify_nonce( $_POST['nonce'], 'wpblc_broken_links_checker' ) ) {
-				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'reviewshake-widgets' ) );
+				wp_die( esc_html__( 'Cheatin&#8217; huh?', 'wpblc-broken-links-checker' ) );
 			}
 
 			if ( isset( $_POST ) && isset( $_POST['action'] ) && 'wpblc_broken_links_mark_as_broken' === $_POST['action'] ) {
-				$link = isset( $_POST['link'] ) ? sanitize_text_field( $_POST['link'] ) : '';
+				$link    = isset( $_POST['link'] ) ? sanitize_text_field( $_POST['link'] ) : '';
 				$post_id = isset( $_POST['postId'] ) ? intval( $_POST['postId'] ) : 0;
 
 				$links = get_option( 'wpblc_broken_links_checker_links', array() );
 
 				if ( isset( $links ) && isset( $links['broken'] ) ) {
-					$links_column = array_column($links['broken'], 'link');
-					$position = array_search($link, $links_column);
+					$links_column = array_column( $links['broken'], 'link' );
+					$position     = array_search( $link, $links_column );
 
-					if ( $position !== false ) {
-						$links['broken'][$position]['marked_fixed'] = 'not-fixed';
+					if ( false !== $position ) {
+						$links['broken'][ $position ]['marked_fixed'] = 'not-fixed';
 
 						if ( isset( $links['fixed'] ) && ! empty( $links['fixed'] ) ) {
-							$links_column = array_column($links['fixed'], 'link');
-							$position = array_search($link, $links_column);
+							$links_column = array_column( $links['fixed'], 'link' );
+							$position     = array_search( $link, $links_column );
 
-							if ( $position !== false ) {
-								unset( $links['fixed'][$position] );
+							if ( false !== $position ) {
+								unset( $links['fixed'][ $position ] );
 							}
 						}
 					}
@@ -145,7 +145,6 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 
 			die();
 		}
-
 	}
 
 	return new WPBLC_Broken_Links_Checker_Admin_Ajax();
