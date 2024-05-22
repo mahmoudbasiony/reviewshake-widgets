@@ -118,6 +118,9 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				}
 			}
 
+			// Update the total scanned links.
+			$links_to_update['total'] = $count;
+
 			// Send email.
 			self::send_mails( $email_enabled, $email_addresses, $links_to_update['broken'] );
 
@@ -155,6 +158,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 			$args = array(
 				'post_type'      => $post_types,
 				'posts_per_page' => -1,
+				'post_status'    => 'publish',
 				'fields'         => 'ids',
 			);
 
@@ -702,24 +706,28 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 				$subject = esc_html__( 'Broken Links Found', 'wpblc-broken-links-checker' );
 
 				// Message.
-				$message = 'The following broken links were found today on ' . esc_url( get_site_url() ) . ':<br><br>';
+				$message = esc_html__( 'The following broken links were found today on', 'wpblc-broken-links-checker' ) . ' ' . esc_url( get_site_url() ) . ':<br><br>';
 
 				$links_to_send = array();
 
 				foreach ( $broken_links as $type => $link ) {
 					if ( 'fixed' !== $link['marked_fixed'] ) {
-						$links_to_send[] = 'URL: ' . $link['link'] . '<br>Status Code: ' . $link['code'] . ' - ' . $link['text'];
+						$links_to_send[] = esc_html__( 'URL:', 'wpblc-broken-links-checker' ) . ' ' . esc_url( $link['link'] ) . '<br>' . esc_html__( 'Status Code:', 'wpblc-broken-links-checker' ) . ' ' . esc_html( $link['code'] ) . ' - ' . esc_html( $link['text'] );
 					}
 				}
 
 				// Verify before sending.
 				if ( ! empty( $links_to_send ) ) {
 					// Add links and footer.
-					$message .= implode( '<br><br>', $links_to_send ) . '<br><br><em>- ' . WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME . ' Plugin</em>';
+					$message .= implode( '<br><br>', $links_to_send ) . '<br><br><em>- ' . WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME . ' ' . esc_html__( 'Plugin', 'wpblc-broken-links-checker' ) . '</em>';
+
+					// Add additional information.
+					$message .= '<br><br>' . esc_html__( 'To read more about WP Deadlinks checker plugin visit', 'wpblc-broken-links-checker' ) . ' <a href="https://wpdeadlinkschecker.silkwp.com">https://wpdeadlinkschecker.silkwp.com</a>';
+					$message .= '<br>' . esc_html__( 'If you need any help, reach out to us at', 'wpblc-broken-links-checker' ) . ' <a href="https://wpdeadlinkschecker.silkwp.com/support">https://wpdeadlinkschecker.silkwp.com/support</a>';
 
 					// Try or log.
 					if ( ! wp_mail( $email_addresses, $subject, $message, $headers ) ) {
-						error_log( WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME . ' email could not be sent. Please check for issues with WP Mailer.' );
+						error_log( WPBLC_BROKEN_LINKS_CHECKER_PLUGIN_NAME . ' ' . esc_html__( 'email could not be sent. Please check for issues with WP Mailer.', 'wpblc-broken-links-checker' ) );
 					}
 				}
 			}

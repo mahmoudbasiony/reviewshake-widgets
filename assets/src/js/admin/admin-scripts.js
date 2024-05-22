@@ -142,6 +142,14 @@
 		});
 	});
 
+	$(document).on('click','.wpblc-broken-links-checker-faq-item input', function(event) {
+		if ($(this).is(':checked')) {
+			$(this).siblings('label').find('.sign').text('-');
+		} else {
+			$(this).siblings('label').find('.sign').text('+');
+		}
+	});
+
 
 	/**
 	 * Mark a link as broken.

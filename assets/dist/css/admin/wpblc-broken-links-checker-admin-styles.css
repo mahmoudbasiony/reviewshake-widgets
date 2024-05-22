@@ -2,6 +2,35 @@
   width: 700px;
 }
 
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .wpblc_no_broken_links_container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2em 0;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .wpblc_no_broken_links_container .wpblc_no_broken_links {
+  padding: 20px;
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 5px;
+  text-align: center;
+  width: 80%;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .wpblc_no_broken_links_container .wpblc_no_broken_links h2 {
+  font-size: 1.5em;
+  margin-bottom: 1em;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .wpblc_no_broken_links_container .wpblc_no_broken_links p {
+  font-size: 1.2em;
+}
+.wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .wpblc_no_broken_links_container .wpblc_no_broken_links p .total-links {
+  font-weight: bold;
+  background-color: #c3e6cb;
+  padding: 0 5px;
+  border-radius: 3px;
+}
 .wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc-broken-links-checker-links-table .column-type {
   width: 13%;
 }
@@ -63,6 +92,7 @@
   align-items: center;
   font-size: 1.3em;
   margin: 1em 0;
+  line-height: 2rem;
 }
 .wpblc-broken-links-checker-scan .wpblc-broken-links-checker-scan-wrap .wpblc_none .wpblc_success_div .wpblc_loader_margin {
   margin: 0 10px;
@@ -96,4 +126,66 @@
   -webkit-transition-duration: 0.4s;
   transition-duration: 0.4s;
   border-radius: 0.5em;
+}
+
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container {
+  background-color: #fff;
+  width: 50%;
+  margin: 1% 0;
+  padding: 2%;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container h2 {
+  margin-bottom: 2em;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container .wpblc-broken-links-checker-faq-item {
+  margin-bottom: 1em;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container .wpblc-broken-links-checker-faq-item .answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.1s ease-out;
+  padding: 0 1em;
+  margin: 0;
+  background: #fff;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container .wpblc-broken-links-checker-faq-item input {
+  display: none;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container .wpblc-broken-links-checker-faq-item input:checked ~ .answer {
+  max-height: 100vh;
+  padding: 1em;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container .wpblc-broken-links-checker-faq-item:hover {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container label {
+  display: block;
+  background: #f5f5f5;
+  padding: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.1s ease;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container label .sign {
+  display: inline-block;
+  width: 1em;
+  margin-right: 0.5em;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-faq-container label:hover {
+  background: #eee;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-help-footer {
+  background-color: #fff;
+  width: 50%;
+  border: 1px solid #e1e1e1;
+  padding: 2%;
+}
+.wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-help-footer .read-more, .wpblc-broken-links-checker-help .wpblc-broken-links-checker-help-wrap .wpblc-broken-links-checker-help-footer .need-help {
+  line-height: 2.2rem;
 }

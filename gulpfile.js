@@ -147,6 +147,7 @@ gulp.task( 'makePluginFile', () => {
         '!composer.lock',
         '!phpcs.xml',
         '!README.md',
+        '!.jshintrc',
         '!wpblc-broken-links-checker.zip'
     ])
     .pipe(zip('wpblc-broken-links-checker.zip'))

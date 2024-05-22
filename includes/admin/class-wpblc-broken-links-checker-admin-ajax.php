@@ -50,12 +50,22 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Ajax' ) ) :
 				// Run the scan.
 				WPBLC_Broken_Links_Checker_Utilities::process_scan();
 
+				// Get the links from the db.
+				$links        = get_option( 'wpblc_broken_links_checker_links', array() );
+				$broken_links = isset( $links['broken'] ) ? $links['broken'] : array();
+
 				// Create a new instance of the table class.
 				$broken_links_table = new WPBLC_Broken_Links_Checker_Admin_Links_List_Table();
 				$broken_links_table->prepare_items();
 
 				// Capture the output of the display method.
 				ob_start();
+
+				// If there are no broken links, return a message.
+				if ( empty( $broken_links ) ) {
+					include_once WPBLC_BROKEN_LINKS_CHECKER_TEMPLATES_PATH . 'admin/views/no-broken-links.php';
+				}
+
 				echo '<form method="get">';
 				$broken_links_table->display();
 				echo '</form>';

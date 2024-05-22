@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Available tabs.
-$plugin_tabs = array( 'general', 'scan' );
+$plugin_tabs = array( 'general', 'scan', 'help' );
 
 // Current tab.
 $plugin_tab = isset( $_GET['tab'] ) && in_array( $_GET['tab'], $plugin_tabs, true ) ? sanitize_text_field( $_GET['tab'] ) : 'general';
@@ -22,6 +22,7 @@ $plugin_tab = isset( $_GET['tab'] ) && in_array( $_GET['tab'], $plugin_tabs, tru
 	<nav class="nav-tab-wrapper wpblc-nav-tab-wrapper">
 		<a href="admin.php?page=wpblc-broken-links-checker&tab=general" class="nav-tab <?php echo 'general' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Settings', 'wpblc-broken-links-checker' ); ?></a>
 		<a href="admin.php?page=wpblc-broken-links-checker&tab=scan" class="nav-tab <?php echo 'scan' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Scan', 'wpblc-broken-links-checker' ); ?></a>
+		<a href="admin.php?page=wpblc-broken-links-checker&tab=help" class="nav-tab <?php echo 'help' === $plugin_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Help', 'wpblc-broken-links-checker' ); ?></a>
 	</nav>
 
 	<div class="wpblc-broken-links-checker-inside-tabs">
