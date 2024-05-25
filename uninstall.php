@@ -25,4 +25,9 @@ if ( defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	 */
 	delete_option( 'wpblc_broken_links_checker_settings' );
 	delete_option( 'wpblc_broken_links_checker_links' );
+
+	/*
+	 * Delete plugin cron jobs.
+	 */
+	wp_clear_scheduled_hook( 'wpblc_broken_links_checker_scheduled_event' );
 }

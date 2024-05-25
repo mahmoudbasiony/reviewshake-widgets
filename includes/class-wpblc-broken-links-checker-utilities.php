@@ -194,11 +194,24 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 
 			// Get html link sources.
 			$html_link_sources = self::get_html_link_sources();
-			if ( ! empty( $html_link_sources ) ) {
+			if ( ! empty( $html_link_sources ) && ! empty( $content ) ) {
 
 				// Fetch the DOM once.
 				$html_dom = new DOMDocument();
-				@$html_dom->loadHTML( $content );
+
+				// Check if the DOMDocument was created.
+				if ( empty( $html_dom ) || ! $html_dom || ! method_exists( $html_dom, 'loadHTML' ) ) {
+					return $matches;
+				}
+
+				// Save old value of libxml use internal errors.
+				$old_value = libxml_use_internal_errors( true );
+
+				// Load the content.
+				$html_dom->loadHTML( $content );
+
+				// Clear the errors.
+				libxml_clear_errors();
 
 				// Look for each source.
 				foreach ( $html_link_sources as $tag => $html_link_source ) {
@@ -216,6 +229,9 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Utilities' ) ) {
 						}
 					}
 				}
+
+				// Restore the old value.
+				libxml_use_internal_errors( $old_value );
 			}
 
 			return $matches;
