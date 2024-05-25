@@ -189,9 +189,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 									return $link['link_source'] === $value;
 								}
 							);
-
-							return isset( $links['broken'] ) ? count( $links['broken'] ) : 0;
-						break;
+							break;
 
 						case 'status':
 							$links['broken'] = array_filter(
@@ -200,9 +198,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 									return $link['marked_fixed'] === $value;
 								}
 							);
-
-							return isset( $links['broken'] ) ? count( $links['broken'] ) : 0;
-						break;
+							break;
 
 						case 'location':
 							$links['broken'] = array_filter(
@@ -215,9 +211,7 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 									}
 								}
 							);
-
-							return isset( $links['broken'] ) ? count( $links['broken'] ) : 0;
-						break;
+							break;
 
 						default:
 							return isset( $links['broken'] ) ? count( $links['broken'] ) : 0;
@@ -225,6 +219,8 @@ if ( ! class_exists( 'WPBLC_Broken_Links_Checker_Admin_Links_List_Table' ) ) :
 					}
 				}
 			}
+
+			return isset( $links['broken'] ) ? count( $links['broken'] ) : 0;
 		}
 
 		/**
